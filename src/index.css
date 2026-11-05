@@ -1,0 +1,146 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-on-secondary: #ffffff;
+  --color-background: #f8f9fa;
+  --color-on-error-container: #93000a;
+  --color-secondary: #a73a00;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-error: #ba1a1a;
+  --color-inverse-on-surface: #f0f1f2;
+  --color-tertiary-container: #00210a;
+  --color-outline: #76777d;
+  --color-on-secondary-container: #571a00;
+  --color-primary-fixed: #dae2fd;
+  --color-secondary-container: #fd651e;
+  --color-on-background: #191c1d;
+  --color-on-tertiary-fixed-variant: #005323;
+  --color-on-primary-fixed: #131b2e;
+  --color-surface-container-high: #e7e8e9;
+  --color-outline-variant: #c6c6cd;
+  --color-surface-bright: #f8f9fa;
+  --color-secondary-fixed: #ffdbce;
+  --color-tertiary-fixed: #95f8a7;
+  --color-surface-variant: #e1e3e4;
+  --color-on-surface-variant: #45464d;
+  --color-surface-dim: #d9dadb;
+  --color-surface-container-highest: #e1e3e4;
+  --color-inverse-primary: #bec6e0;
+  --color-surface-container-low: #f3f4f5;
+  --color-surface-container: #edeeef;
+  --color-surface-tint: #565e74;
+  --color-on-primary-fixed-variant: #3f465c;
+  --color-primary: #000000;
+  --color-on-tertiary: #ffffff;
+  --color-primary-container: #131b2e;
+  --color-primary-fixed-dim: #bec6e0;
+  --color-on-tertiary-container: #339650;
+  --color-on-secondary-fixed-variant: #7f2b00;
+  --color-on-primary-container: #7c839b;
+  --color-on-secondary-fixed: #370e00;
+  --color-tertiary-fixed-dim: #79db8d;
+  --color-on-surface: #191c1d;
+  --color-surface: #f8f9fa;
+  --color-on-tertiary-fixed: #00210a;
+  --color-inverse-surface: #2e3132;
+  --color-secondary-fixed-dim: #ffb599;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-primary: #ffffff;
+  --color-tertiary: #000000;
+
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 0.75rem;
+  --spacing-space-lg: 1.25rem;
+  --spacing-space-xl: 2rem;
+  --spacing-gutter: 1rem;
+  --spacing-margin: 2rem;
+
+  --font-headline-xl: "Hanken Grotesk", sans-serif;
+  --font-headline-lg: "Hanken Grotesk", sans-serif;
+  --font-headline-md: "Hanken Grotesk", sans-serif;
+  --font-body-lg: "Hanken Grotesk", sans-serif;
+  --font-body-md: "Hanken Grotesk", sans-serif;
+  --font-body-sm: "Hanken Grotesk", sans-serif;
+  --font-label-code: "JetBrains Mono", monospace;
+  --font-label-mono-sm: "JetBrains Mono", monospace;
+  --font-label-mono-xs: "JetBrains Mono", monospace;
+}
+
+:root {
+  --background: #f8f9fa;
+  --foreground: #191c1d;
+}
+
+@layer utilities {
+  .text-headline-xl {
+    font-size: 32px;
+    line-height: 38px;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+  .text-headline-lg {
+    font-size: 22px;
+    line-height: 28px;
+    letter-spacing: -0.015em;
+    font-weight: 700;
+  }
+  .text-headline-md {
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 600;
+  }
+  .text-body-lg {
+    font-size: 15px;
+    line-height: 22px;
+    font-weight: 400;
+  }
+  .text-body-md {
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 400;
+  }
+  .text-body-sm {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
+  }
+  .text-label-code {
+    font-size: 11px;
+    line-height: 14px;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .text-label-mono-sm {
+    font-size: 10px;
+    line-height: 13px;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+  .text-label-mono-xs {
+    font-size: 9px;
+    line-height: 12px;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+  }
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  vertical-align: middle;
+}
