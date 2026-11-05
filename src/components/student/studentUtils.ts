@@ -2,18 +2,22 @@ import type { Assignment, RosterStudent, StudentSubmission } from '../../types';
 
 export type StudentStatus = 'submitted' | 'overdue' | 'pending';
 
+type StudentReference =
+  | RosterStudent
+  | { id: string; studentId?: string; name?: string };
+
 /**
  * Finds the submission record for a given student in an assignment.
  */
 export function getStudentSubmission(
   assignment: Assignment,
-  student: RosterStudent | { id: string; studentId?: string; name?: string }
+  student: StudentReference
 ): StudentSubmission | undefined {
   return assignment.submissions.find(
-    (sub) =>
-      (student.studentId && sub.studentId === student.studentId) ||
-      sub.id === `sub-${student.id}` ||
-      (student.name && sub.name === student.name)
+    (submission) =>
+      (student.studentId && submission.studentId === student.studentId) ||
+      submission.id === `sub-${student.id}` ||
+      (student.name && submission.name === student.name)
   );
 }
 
@@ -30,7 +34,9 @@ export function isAssignmentAssignedToStudent(
 
   const isExplicitlyAssigned = assignment.assignedStudentIds.includes(student.id);
   const hasExistingSubmission = assignment.submissions.some(
-    (sub) => sub.studentId === student.studentId || sub.name === student.name
+    (submission) =>
+      submission.studentId === student.studentId ||
+      submission.name === student.name
   );
 
   return isExplicitlyAssigned || hasExistingSubmission;
@@ -41,7 +47,7 @@ export function isAssignmentAssignedToStudent(
  */
 export function getStudentAssignmentStatus(
   assignment: Assignment,
-  student: RosterStudent | { id: string; studentId?: string; name?: string }
+  student: StudentReference
 ): StudentStatus {
   const submission = getStudentSubmission(assignment, student);
   if (submission?.status === 'Submitted') {

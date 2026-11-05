@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -15,14 +14,19 @@ interface DeleteModalProps {
   onConfirm: () => void;
 }
 
-export const DeleteModal: React.FC<DeleteModalProps> = ({
+export const DeleteModal = ({
   isOpen,
   assignmentTitle,
   onClose,
   onConfirm,
-}) => {
+}: DeleteModalProps) => {
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <AlertDialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <AlertDialogContent
         overlayClassName="bg-primary/40 backdrop-blur-sm"
         className="!max-w-lg w-full !rounded-none bg-surface-container-lowest p-space-lg border border-outline-variant space-y-space-md shadow-2xl !ring-0 !gap-0"

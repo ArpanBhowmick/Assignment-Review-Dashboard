@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -16,16 +15,21 @@ export interface SubmissionConfirmModalProps {
   isSubmitting?: boolean;
 }
 
-export const SubmissionConfirmModal: React.FC<SubmissionConfirmModalProps> = ({
+export const SubmissionConfirmModal = ({
   isOpen,
   assignmentTitle,
   assignmentCode = 'CS101',
   onClose,
   onConfirm,
   isSubmitting = false,
-}) => {
+}: SubmissionConfirmModalProps) => {
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <AlertDialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <AlertDialogContent
         overlayClassName="bg-inverse-surface/60 backdrop-blur-sm"
         className="!max-w-lg w-full !rounded-DEFAULT bg-surface-container-lowest p-space-lg border border-surface-dim flex flex-col gap-space-md shadow-lg !ring-0 !gap-0"

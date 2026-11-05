@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Assignment, RosterStudent } from '../../types';
 import { RosterSelectionTable } from '../../components/admin/RosterSelectionTable';
@@ -13,10 +13,10 @@ interface CreateAssignmentPageProps {
   onCreateAssignment: (assignment: Assignment) => void;
 }
 
-export const CreateAssignmentPage: React.FC<CreateAssignmentPageProps> = ({
+export const CreateAssignmentPage = ({
   roster,
   onCreateAssignment,
-}) => {
+}: CreateAssignmentPageProps) => {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState(
@@ -62,8 +62,8 @@ export const CreateAssignmentPage: React.FC<CreateAssignmentPageProps> = ({
     showToast('Draft revision stored in local ledger.');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!title.trim()) {
       alert('Please provide an assignment title.');
       return;
@@ -87,8 +87,12 @@ export const CreateAssignmentPage: React.FC<CreateAssignmentPageProps> = ({
           : undefined,
       totalStudents: scope === 'all' ? 28 : selectedStudentIds.length,
       submittedCount: 0,
-      assignedStudentIds: scope === 'all' ? roster.map((r) => r.id) : selectedStudentIds,
-      submissions: (scope === 'all' ? roster : roster.filter((r) => selectedStudentIds.includes(r.id))).map((student) => ({
+      assignedStudentIds:
+        scope === 'all' ? roster.map((student) => student.id) : selectedStudentIds,
+      submissions: (scope === 'all'
+        ? roster
+        : roster.filter((student) => selectedStudentIds.includes(student.id))
+      ).map((student) => ({
         id: `sub-${student.id}`,
         name: student.name,
         studentId: student.studentId,

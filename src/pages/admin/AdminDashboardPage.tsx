@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Assignment } from '../../types';
 import { AssignmentCard } from '../../components/admin/AssignmentCard';
@@ -12,10 +12,10 @@ interface AdminDashboardPageProps {
   onDeleteAssignment: (id: string) => void;
 }
 
-export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
+export const AdminDashboardPage = ({
   assignments,
   onDeleteAssignment,
-}) => {
+}: AdminDashboardPageProps) => {
   const navigate = useNavigate();
   const [selectedForDelete, setSelectedForDelete] = useState<Assignment | null>(null);
 
@@ -26,7 +26,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     }
   };
 
-  const activeCount = assignments.filter((a) => !a.isGraded).length;
+  const activeCount = assignments.filter((assignment) => !assignment.isGraded).length;
 
   return (
     <div className="max-w-[1280px] mx-auto px-gutter py-space-lg">

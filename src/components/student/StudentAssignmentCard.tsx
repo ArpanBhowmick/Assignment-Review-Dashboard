@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Assignment } from '../../types';
 import { getStudentSubmission, getStudentAssignmentStatus } from './studentUtils';
@@ -10,23 +9,20 @@ export interface StudentAssignmentCardProps {
   currentStudentId: string;
 }
 
-export const StudentAssignmentCard: React.FC<StudentAssignmentCardProps> = ({
+export const StudentAssignmentCard = ({
   assignment,
   currentStudentId,
-}) => {
+}: StudentAssignmentCardProps) => {
   const navigate = useNavigate();
 
-  const studentSubmission = getStudentSubmission(assignment, {
+  const studentReference = {
     id: currentStudentId,
     studentId: '#STU-4819',
     name: 'Alex Doe',
-  });
+  };
 
-  const status = getStudentAssignmentStatus(assignment, {
-    id: currentStudentId,
-    studentId: '#STU-4819',
-    name: 'Alex Doe',
-  });
+  const studentSubmission = getStudentSubmission(assignment, studentReference);
+  const status = getStudentAssignmentStatus(assignment, studentReference);
 
   const isSubmitted = status === 'submitted';
   const isOverdue = status === 'overdue';
@@ -34,6 +30,16 @@ export const StudentAssignmentCard: React.FC<StudentAssignmentCardProps> = ({
 
   const handleOpenDetails = () => {
     navigate(`/student/assignments/${assignment.id}`);
+  };
+
+  const getActionLabel = () => {
+    if (!isSubmitted && !isOverdue) {
+      return 'Open Assignment & Submit';
+    }
+    if (isSubmitted) {
+      return isGraded ? 'View Record' : 'View Submission Details';
+    }
+    return 'View Assignment Spec';
   };
 
   return (
@@ -207,15 +213,7 @@ export const StudentAssignmentCard: React.FC<StudentAssignmentCardProps> = ({
                   : 'px-space-md py-2 bg-surface-container-high hover:bg-surface-container-highest text-on-surface'
               }`}
             >
-              <span>
-                {!isSubmitted && !isOverdue
-                  ? 'Open Assignment & Submit'
-                  : isSubmitted
-                  ? isGraded
-                    ? 'View Record'
-                    : 'View Submission Details'
-                  : 'View Assignment Spec'}
-              </span>
+              <span>{getActionLabel()}</span>
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
             </Button>
 

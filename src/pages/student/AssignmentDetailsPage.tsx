@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import type { Assignment, RosterStudent } from '../../types';
 import { SubmissionConfirmModal } from '../../components/student/SubmissionConfirmModal';
@@ -18,11 +18,49 @@ export interface AssignmentDetailsPageProps {
   onSubmitAssignment: (assignmentId: string, timestamp: string) => void;
 }
 
-export const AssignmentDetailsPage: React.FC<AssignmentDetailsPageProps> = ({
+interface SubmissionStatusDisplay {
+  cardLabel: string;
+  navLabel: string;
+  badgeClass: string;
+  dotClass: string;
+}
+
+const buildSubmissionStatusDisplay = (
+  isSubmitted: boolean,
+  isOverdue: boolean,
+  timestamp: string
+): SubmissionStatusDisplay => {
+  if (isSubmitted) {
+    return {
+      cardLabel: `● SUBMITTED (${timestamp})`,
+      navLabel: 'Submitted',
+      badgeClass: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
+      dotClass: 'bg-on-tertiary-container',
+    };
+  }
+
+  if (isOverdue) {
+    return {
+      cardLabel: '[PAST DEADLINE]',
+      navLabel: 'Past Deadline',
+      badgeClass: 'bg-error-container text-on-error-container',
+      dotClass: 'bg-error',
+    };
+  }
+
+  return {
+    cardLabel: '[PENDING SUBMISSION]',
+    navLabel: 'Pending Submission',
+    badgeClass: 'bg-secondary-fixed text-on-secondary-fixed-variant',
+    dotClass: 'bg-secondary animate-pulse',
+  };
+};
+
+export const AssignmentDetailsPage = ({
   assignments,
   currentStudent,
   onSubmitAssignment,
-}) => {
+}: AssignmentDetailsPageProps) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,26 +101,23 @@ export const AssignmentDetailsPage: React.FC<AssignmentDetailsPageProps> = ({
   const submissionTimestamp = studentSubmission?.timestamp || 'Official Registration Verified';
 
   // Derived status configuration for badges
-  const statusConfig = isSubmitted
-    ? {
-        cardLabel: `● SUBMITTED (${submissionTimestamp})`,
-        navLabel: 'Submitted',
-        badgeClass: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
-        dotClass: 'bg-on-tertiary-container',
-      }
-    : isOverdue
-    ? {
-        cardLabel: '[PAST DEADLINE]',
-        navLabel: 'Past Deadline',
-        badgeClass: 'bg-error-container text-on-error-container',
-        dotClass: 'bg-error',
-      }
-    : {
-        cardLabel: '[PENDING SUBMISSION]',
-        navLabel: 'Pending Submission',
-        badgeClass: 'bg-secondary-fixed text-on-secondary-fixed-variant',
-        dotClass: 'bg-secondary animate-pulse',
-      };
+  const statusConfig = buildSubmissionStatusDisplay(
+    isSubmitted,
+    isOverdue,
+    submissionTimestamp
+  );
+
+  const getDueStatusLabel = () => {
+    if (isSubmitted) return 'Submission Verified';
+    if (isOverdue) return 'Deadline Passed';
+    return assignment.dueStatusBadge || 'Due in 2 days';
+  };
+
+  const getDueStatusBadgeClassName = () => {
+    if (isSubmitted) return statusConfig.badgeClass;
+    if (isOverdue) return 'bg-error-container text-on-error-container';
+    return 'bg-secondary-container text-on-secondary';
+  };
 
   const handleConfirmSubmit = () => {
     const timestamp = createSubmissionTimestamp();
@@ -181,19 +216,9 @@ export const AssignmentDetailsPage: React.FC<AssignmentDetailsPageProps> = ({
             </div>
           </div>
           <Badge
-            className={`inline-flex items-center self-start sm:self-center px-2 py-1 rounded-DEFAULT font-label-code text-label-code uppercase font-bold tracking-wider border-0 h-auto ${
-              isSubmitted
-                ? 'bg-tertiary-fixed text-on-tertiary-fixed-variant'
-                : isOverdue
-                ? 'bg-error-container text-on-error-container'
-                : 'bg-secondary-container text-on-secondary'
-            }`}
+            className={`inline-flex items-center self-start sm:self-center px-2 py-1 rounded-DEFAULT font-label-code text-label-code uppercase font-bold tracking-wider border-0 h-auto ${getDueStatusBadgeClassName()}`}
           >
-            {isSubmitted
-              ? 'Submission Verified'
-              : isOverdue
-              ? 'Deadline Passed'
-              : assignment.dueStatusBadge || 'Due in 2 days'}
+            {getDueStatusLabel()}
           </Badge>
         </div>
 

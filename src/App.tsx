@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { initialAssignments, mockRoster, currentStudent } from './data/mockData';
-import type { Assignment } from './types';
+import type { Assignment, StudentSubmission } from './types';
 import AdminLayout from './components/layout/AdminLayout';
 import StudentLayout from './components/layout/StudentLayout';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
@@ -18,10 +18,16 @@ import {
 } from './pages/Auth/authAccounts';
 
 const AUTH_STORAGE_KEY = 'joineazy_auth_user';
+const ASSIGNMENTS_STORAGE_KEY = 'joineazy_assignments';
 const SEEDED_ACCOUNTS = [...SEEDED_STUDENT_ACCOUNTS, ...SEEDED_ADMIN_ACCOUNTS];
 
 const dashboardPathForRole = (role: UserRole) =>
   role === 'admin' ? '/assignments' : '/student/dashboard';
+
+const matchesCurrentStudent = (submission: StudentSubmission) =>
+  submission.studentId === currentStudent.studentId ||
+  submission.name === currentStudent.name ||
+  submission.id === `sub-${currentStudent.id}`;
 
 const readStoredAccount = (): UserAccount | null => {
   try {
@@ -59,21 +65,21 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(readStoredAccount);
   const [assignments, setAssignments] = useState<Assignment[]>(() => {
     try {
-      const saved = localStorage.getItem('joineazy_assignments');
-      if (saved) {
-        return JSON.parse(saved);
+      const savedAssignments = localStorage.getItem(ASSIGNMENTS_STORAGE_KEY);
+      if (savedAssignments) {
+        return JSON.parse(savedAssignments) as Assignment[];
       }
-    } catch (e) {
-      console.error('Failed to load assignments from localStorage:', e);
+    } catch (error) {
+      console.error('Failed to load assignments from localStorage:', error);
     }
     return initialAssignments;
   });
 
   useEffect(() => {
     try {
-      localStorage.setItem('joineazy_assignments', JSON.stringify(assignments));
-    } catch (e) {
-      console.error('Failed to save assignments to localStorage:', e);
+      localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(assignments));
+    } catch (error) {
+      console.error('Failed to save assignments to localStorage:', error);
     }
   }, [assignments]);
 
@@ -81,8 +87,8 @@ function App() {
     setCurrentUser(account);
     try {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(account));
-    } catch (e) {
-      console.error('Failed to save current user to localStorage:', e);
+    } catch (error) {
+      console.error('Failed to save current user to localStorage:', error);
     }
   };
 
@@ -90,8 +96,8 @@ function App() {
     setCurrentUser(null);
     try {
       localStorage.removeItem(AUTH_STORAGE_KEY);
-    } catch (e) {
-      console.error('Failed to clear current user from localStorage:', e);
+    } catch (error) {
+      console.error('Failed to clear current user from localStorage:', error);
     }
     navigate('/login', { replace: true });
   };
@@ -102,51 +108,42 @@ function App() {
 
   const handleUpdateAssignment = (updatedAssignment: Assignment) => {
     setAssignments((prev) =>
-      prev.map((a) => (a.id === updatedAssignment.id ? updatedAssignment : a))
+      prev.map((assignment) =>
+        assignment.id === updatedAssignment.id ? updatedAssignment : assignment
+      )
     );
   };
 
   const handleDeleteAssignment = (id: string) => {
-    setAssignments((prev) => prev.filter((a) => a.id !== id));
+    setAssignments((prev) => prev.filter((assignment) => assignment.id !== id));
   };
 
   const handleSubmitAssignment = (assignmentId: string, timestamp: string) => {
     setAssignments((prev) =>
-      prev.map((a) => {
-        if (a.id !== assignmentId) return a;
+      prev.map((assignment) => {
+        if (assignment.id !== assignmentId) return assignment;
 
-        const existingSubmission = a.submissions.find(
-          (s) =>
-            s.studentId === currentStudent.studentId ||
-            s.name === currentStudent.name ||
-            s.id === `sub-${currentStudent.id}`
-        );
-
-        let updatedSubmissions: typeof a.submissions;
+        const existingSubmission = assignment.submissions.find(matchesCurrentStudent);
+        let updatedSubmissions: StudentSubmission[];
         let isNewlySubmitted = false;
 
         if (existingSubmission) {
           if (existingSubmission.status !== 'Submitted') {
             isNewlySubmitted = true;
           }
-          updatedSubmissions = a.submissions.map((s) => {
-            if (
-              s.studentId === currentStudent.studentId ||
-              s.name === currentStudent.name ||
-              s.id === `sub-${currentStudent.id}`
-            ) {
-              return {
-                ...s,
-                status: 'Submitted' as const,
-                timestamp,
-              };
-            }
-            return s;
-          });
+          updatedSubmissions = assignment.submissions.map((submission) =>
+            matchesCurrentStudent(submission)
+              ? {
+                  ...submission,
+                  status: 'Submitted' as const,
+                  timestamp,
+                }
+              : submission
+          );
         } else {
           isNewlySubmitted = true;
           updatedSubmissions = [
-            ...a.submissions,
+            ...assignment.submissions,
             {
               id: `sub-${currentStudent.id}`,
               name: currentStudent.name,
@@ -158,8 +155,10 @@ function App() {
         }
 
         return {
-          ...a,
-          submittedCount: isNewlySubmitted ? a.submittedCount + 1 : a.submittedCount,
+          ...assignment,
+          submittedCount: isNewlySubmitted
+            ? assignment.submittedCount + 1
+            : assignment.submittedCount,
           submissions: updatedSubmissions,
         };
       })

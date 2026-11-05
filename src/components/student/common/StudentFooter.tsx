@@ -1,10 +1,8 @@
-import React from 'react';
-
 export interface StudentFooterProps {
   className?: string;
 }
 
-export const StudentFooter: React.FC<StudentFooterProps> = ({ className = '' }) => {
+export const StudentFooter = ({ className = '' }: StudentFooterProps) => {
   return (
     <footer className={`w-full border-t border-surface-dim bg-surface-container-lowest mt-space-xl ${className}`}>
       <div className="max-w-[1280px] mx-auto px-gutter py-space-md flex flex-col md:flex-row items-center justify-between gap-space-sm font-label-mono-xs text-label-mono-xs text-on-surface-variant">

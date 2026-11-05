@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   type UserRole,
@@ -8,6 +8,7 @@ import {
 } from './authAccounts';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export interface LoginPageProps {
   currentUser?: UserAccount | null;
@@ -15,27 +16,39 @@ export interface LoginPageProps {
   defaultRole?: UserRole;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({
+const accountsForRole = (role: UserRole) =>
+  role === 'student' ? SEEDED_STUDENT_ACCOUNTS : SEEDED_ADMIN_ACCOUNTS;
+
+const isUserRole = (value: string): value is UserRole =>
+  value === 'student' || value === 'admin';
+
+export const LoginPage = ({
   onSelectAccount,
   defaultRole = 'student',
-}) => {
+}: LoginPageProps) => {
   const navigate = useNavigate();
   const [role, setRole] = useState<UserRole>(defaultRole);
   const [selectedAccountId, setSelectedAccountId] = useState<string>(
-    defaultRole === 'student' ? SEEDED_STUDENT_ACCOUNTS[0].id : SEEDED_ADMIN_ACCOUNTS[0].id
+    accountsForRole(defaultRole)[0].id
   );
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
 
-  const activeAccounts = role === 'student' ? SEEDED_STUDENT_ACCOUNTS : SEEDED_ADMIN_ACCOUNTS;
+  const activeAccounts = accountsForRole(role);
   const selectedAccount =
-    activeAccounts.find((acc) => acc.id === selectedAccountId) || activeAccounts[0];
+    activeAccounts.find((account) => account.id === selectedAccountId) ||
+    activeAccounts[0];
 
   const handleRoleChange = (newRole: UserRole) => {
     if (newRole === role) return;
     setRole(newRole);
-    const newAccounts = newRole === 'student' ? SEEDED_STUDENT_ACCOUNTS : SEEDED_ADMIN_ACCOUNTS;
-    setSelectedAccountId(newAccounts[0].id);
+    setSelectedAccountId(accountsForRole(newRole)[0].id);
+  };
+
+  const handleRoleTabChange = (value: string) => {
+    if (isUserRole(value)) {
+      handleRoleChange(value);
+    }
   };
 
   const handleContinue = () => {
@@ -114,34 +127,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-2 p-1 bg-surface-container-low rounded-lg border border-outline-variant">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => handleRoleChange('student')}
-                  className={`py-2.5 px-3 rounded font-label-code text-label-code uppercase transition-all flex items-center justify-center gap-2 cursor-pointer border-0 h-auto shadow-none ${
-                    role === 'student'
-                      ? 'bg-primary text-white font-semibold shadow-sm hover:bg-primary hover:text-white'
-                      : 'text-on-surface-variant hover:text-on-surface bg-transparent font-semibold'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[18px]">person</span>
-                  <span>Student</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => handleRoleChange('admin')}
-                  className={`py-2.5 px-3 rounded font-label-code text-label-code uppercase transition-all flex items-center justify-center gap-2 cursor-pointer border-0 h-auto shadow-none ${
-                    role === 'admin'
-                      ? 'bg-primary text-white font-semibold shadow-sm hover:bg-primary hover:text-white'
-                      : 'text-on-surface-variant hover:text-on-surface bg-transparent font-semibold'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[18px]">shield_person</span>
-                  <span>Admin (Professor)</span>
-                </Button>
-              </div>
+              <Tabs
+                value={role}
+                onValueChange={handleRoleTabChange}
+                className="w-full"
+              >
+                <TabsList className="grid grid-cols-2 p-1 bg-surface-container-low rounded-lg border border-outline-variant w-full h-auto group-data-horizontal/tabs:h-auto">
+                  <TabsTrigger
+                    value="student"
+                    className="py-2.5 px-3 rounded font-label-code text-label-code uppercase transition-all flex items-center justify-center gap-2 cursor-pointer border-0 h-auto shadow-none font-semibold text-on-surface-variant hover:text-on-surface bg-transparent data-active:bg-primary data-active:text-white data-active:font-semibold data-active:shadow-sm data-active:hover:bg-primary data-active:hover:text-white"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">person</span>
+                    <span>Student</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="admin"
+                    className="py-2.5 px-3 rounded font-label-code text-label-code uppercase transition-all flex items-center justify-center gap-2 cursor-pointer border-0 h-auto shadow-none font-semibold text-on-surface-variant hover:text-on-surface bg-transparent data-active:bg-primary data-active:text-white data-active:font-semibold data-active:shadow-sm data-active:hover:bg-primary data-active:hover:text-white"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">shield_person</span>
+                    <span>Admin (Professor)</span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
 
             {/* Account Profile List */}

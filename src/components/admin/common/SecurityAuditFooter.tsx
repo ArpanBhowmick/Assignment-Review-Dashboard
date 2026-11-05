@@ -1,16 +1,14 @@
-import React from 'react';
-
 interface SecurityAuditFooterProps {
   className?: string;
   protocolText?: string;
   indexRef?: string;
 }
 
-export const SecurityAuditFooter: React.FC<SecurityAuditFooterProps> = ({
+export const SecurityAuditFooter = ({
   className = '',
   protocolText = 'Security Protocol: CS Dept Strict Isolation • Academic Integrity Engine Active',
   indexRef = 'Index Ref: ARCH-2026-CS101-FACULTY-08821',
-}) => {
+}: SecurityAuditFooterProps) => {
   return (
     <aside
       className={`mt-12 pt-6 border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-3 text-on-surface-variant font-label-mono-xs text-xs uppercase tracking-wider ${className}`}

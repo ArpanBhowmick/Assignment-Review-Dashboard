@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { Assignment, RosterStudent } from '../../types';
 import { StudentAssignmentCard } from '../../components/student/StudentAssignmentCard';
 import {
@@ -17,10 +17,10 @@ export interface StudentDashboardPageProps {
 
 type FilterTab = 'all' | 'pending' | 'submitted' | 'archived';
 
-export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({
+export const StudentDashboardPage = ({
   assignments,
   currentStudent,
-}) => {
+}: StudentDashboardPageProps) => {
   const [filterTab, setFilterTab] = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
 

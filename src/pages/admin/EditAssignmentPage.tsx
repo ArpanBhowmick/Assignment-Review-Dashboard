@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { Assignment, RosterStudent } from '../../types';
+import type { Assignment, RosterStudent, StudentSubmission } from '../../types';
 import { RosterSelectionTable } from '../../components/admin/RosterSelectionTable';
 import { DeleteModal } from '../../components/admin/DeleteModal';
 import { Button } from '@/components/ui/button';
@@ -16,12 +16,40 @@ interface EditAssignmentPageProps {
   onDeleteAssignment: (id: string) => void;
 }
 
-export const EditAssignmentPage: React.FC<EditAssignmentPageProps> = ({
+const findSubmissionForStudent = (
+  submissions: StudentSubmission[],
+  student: RosterStudent
+) =>
+  submissions.find(
+    (submission) =>
+      submission.studentId === student.studentId ||
+      submission.id === `sub-${student.id}` ||
+      submission.name === student.name
+  );
+
+const addSubmissionsForAssignedStudents = (
+  submissions: StudentSubmission[],
+  assignedStudents: RosterStudent[]
+): StudentSubmission[] => {
+  const newSubmissions: StudentSubmission[] = assignedStudents
+    .filter((student) => !findSubmissionForStudent(submissions, student))
+    .map((student) => ({
+      id: `sub-${student.id}`,
+      name: student.name,
+      studentId: student.studentId,
+      status: 'Not Submitted',
+      timestamp: 'Awaiting Student Push',
+    }));
+
+  return [...submissions, ...newSubmissions];
+};
+
+export const EditAssignmentPage = ({
   assignments,
   roster,
   onUpdateAssignment,
   onDeleteAssignment,
-}) => {
+}: EditAssignmentPageProps) => {
   const { assignmentId } = useParams();
   const navigate = useNavigate();
 
@@ -66,14 +94,19 @@ export const EditAssignmentPage: React.FC<EditAssignmentPageProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!title.trim()) {
       alert('Please provide an assignment title.');
       return;
     }
 
-    const updated: Assignment = {
+    const assignedStudents =
+      scope === 'all'
+        ? roster
+        : roster.filter((student) => selectedStudentIds.includes(student.id));
+
+    const updatedAssignment: Assignment = {
       ...currentAssignment,
       title,
       description,
@@ -87,10 +120,15 @@ export const EditAssignmentPage: React.FC<EditAssignmentPageProps> = ({
           ? `Restricted Cohort (${selectedStudentIds.length} Students)`
           : undefined,
       totalStudents: scope === 'all' ? 28 : selectedStudentIds.length,
-      assignedStudentIds: scope === 'all' ? roster.map((r) => r.id) : selectedStudentIds,
+      assignedStudentIds:
+        scope === 'all' ? roster.map((student) => student.id) : selectedStudentIds,
+      submissions: addSubmissionsForAssignedStudents(
+        currentAssignment?.submissions ?? [],
+        assignedStudents
+      ),
     };
 
-    onUpdateAssignment(updated);
+    onUpdateAssignment(updatedAssignment);
     showToast('Changes committed and updated in faculty console register.');
     setTimeout(() => {
       navigate('/assignments');

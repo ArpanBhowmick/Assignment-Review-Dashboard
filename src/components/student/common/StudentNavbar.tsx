@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -10,12 +9,12 @@ export interface StudentNavbarProps {
   onLogout?: () => void;
 }
 
-export const StudentNavbar: React.FC<StudentNavbarProps> = ({
+export const StudentNavbar = ({
   studentName = 'Alex Doe',
   studentId = '#STU-4819',
   standing = 'CS Undergrad',
   onLogout,
-}) => {
+}: StudentNavbarProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest border-b border-surface-dim">
       <div className="h-16 max-w-[1280px] mx-auto px-gutter flex items-center justify-between">

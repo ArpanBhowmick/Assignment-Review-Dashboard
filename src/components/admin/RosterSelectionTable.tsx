@@ -1,9 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { RosterStudent } from '../../types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
 
 interface RosterSelectionTableProps {
   roster: RosterStudent[];
@@ -14,29 +22,29 @@ interface RosterSelectionTableProps {
   isEditMode?: boolean;
 }
 
-export const RosterSelectionTable: React.FC<RosterSelectionTableProps> = ({
+export const RosterSelectionTable = ({
   roster,
   scope,
   onScopeChange,
   selectedStudentIds,
   onSelectedChange,
   isEditMode = false,
-}) => {
+}: RosterSelectionTableProps) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredRoster = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return roster;
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return roster;
     return roster.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.studentId.toLowerCase().includes(q)
+      (student) =>
+        student.name.toLowerCase().includes(query) ||
+        student.studentId.toLowerCase().includes(query)
     );
   }, [roster, searchQuery]);
 
   const handleToggle = (id: string) => {
     if (selectedStudentIds.includes(id)) {
-      onSelectedChange(selectedStudentIds.filter((item) => item !== id));
+      onSelectedChange(selectedStudentIds.filter((studentId) => studentId !== id));
     } else {
       onSelectedChange([...selectedStudentIds, id]);
     }
@@ -44,7 +52,7 @@ export const RosterSelectionTable: React.FC<RosterSelectionTableProps> = ({
 
   const handleSelectAll = (select: boolean) => {
     if (select) {
-      onSelectedChange(roster.map((s) => s.id));
+      onSelectedChange(roster.map((student) => student.id));
     } else {
       onSelectedChange([]);
     }
@@ -202,90 +210,94 @@ export const RosterSelectionTable: React.FC<RosterSelectionTableProps> = ({
         </div>
 
         {/* Student Selection Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-surface-container-high border-b border-outline-variant font-label-mono-xs text-label-mono-xs text-on-surface-variant uppercase tracking-wider">
-                <th className="py-2.5 px-3 w-10 text-center">
-                  <span className="sr-only">Select</span>
-                </th>
-                <th className="py-2.5 px-3">Student Name</th>
-                <th className="py-2.5 px-3">Identifier (#ID)</th>
-                <th className="py-2.5 px-3">Enrolled Section</th>
-                <th className="py-2.5 px-3">
-                  {isEditMode ? 'Academic Track' : 'Academic Standing'}
-                </th>
-                <th className="py-2.5 px-3 text-right">
-                  {isEditMode ? 'Cohort Status' : 'Audit Status'}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-outline-variant font-body-sm text-body-sm text-on-surface bg-surface-container-lowest">
-              {filteredRoster.map((student) => {
-                const isChecked =
-                  scope === 'all' || selectedStudentIds.includes(student.id);
+        <Table className="w-full text-left border-collapse">
+          <TableHeader>
+            <TableRow className="bg-surface-container-high border-b border-outline-variant font-label-mono-xs text-label-mono-xs text-on-surface-variant uppercase tracking-wider hover:bg-surface-container-high">
+              <TableHead className="h-auto py-2.5 px-3 w-10 text-center [&:has([role=checkbox])]:pr-3 text-on-surface-variant">
+                <span className="sr-only">Select</span>
+              </TableHead>
+              <TableHead className="h-auto py-2.5 px-3 text-on-surface-variant font-medium">
+                Student Name
+              </TableHead>
+              <TableHead className="h-auto py-2.5 px-3 text-on-surface-variant font-medium">
+                Identifier (#ID)
+              </TableHead>
+              <TableHead className="h-auto py-2.5 px-3 text-on-surface-variant font-medium">
+                Enrolled Section
+              </TableHead>
+              <TableHead className="h-auto py-2.5 px-3 text-on-surface-variant font-medium">
+                {isEditMode ? 'Academic Track' : 'Academic Standing'}
+              </TableHead>
+              <TableHead className="h-auto py-2.5 px-3 text-right text-on-surface-variant font-medium">
+                {isEditMode ? 'Cohort Status' : 'Audit Status'}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-outline-variant font-body-sm text-body-sm text-on-surface bg-surface-container-lowest">
+            {filteredRoster.map((student) => {
+              const isChecked =
+                scope === 'all' || selectedStudentIds.includes(student.id);
 
-                return (
-                  <tr
-                    key={student.id}
-                    className="hover:bg-surface-container-low transition-colors"
-                  >
-                    <td className="py-2.5 px-3 text-center">
-                      <Checkbox
-                        checked={isChecked}
-                        onCheckedChange={() => {
-                          if (scope === 'all') {
-                            onScopeChange('selected');
-                            onSelectedChange(
-                              roster
-                                .filter((s) => s.id !== student.id)
-                                .map((s) => s.id)
-                            );
-                          } else {
-                            handleToggle(student.id);
-                          }
-                        }}
-                        className="student-checkbox cursor-pointer"
-                        aria-label={`Select ${student.name}`}
-                      />
-                    </td>
-                    <td className="py-2.5 px-3 font-semibold text-primary">
-                      {student.name}
-                    </td>
-                    <td className="py-2.5 px-3 font-label-code text-label-code text-on-surface-variant">
-                      {student.studentId}
-                    </td>
-                    <td className="py-2.5 px-3 font-label-mono-xs text-label-mono-xs uppercase text-on-surface-variant">
-                      {student.section}
-                    </td>
-                    <td className="py-2.5 px-3">
-                      {student.isHonors ? (
-                        <Badge className="font-label-mono-xs text-label-mono-xs px-1.5 py-0.5 bg-secondary-fixed text-on-secondary-fixed border border-secondary uppercase font-semibold rounded-none h-auto">
-                          Honors Track
-                        </Badge>
-                      ) : (
-                        <Badge className="font-label-mono-xs text-label-mono-xs px-1.5 py-0.5 bg-surface-container text-on-surface uppercase rounded-none border-0 h-auto font-normal">
-                          Regular Standing
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-3 text-right">
-                      {isChecked ? (
-                        <span className="font-label-mono-xs text-label-mono-xs text-on-tertiary-container uppercase font-semibold">
-                          ● Allocated
-                        </span>
-                      ) : (
-                        <span className="font-label-mono-xs text-label-mono-xs text-outline uppercase font-semibold">
-                          Exempt / Unassigned
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+              return (
+                <TableRow
+                  key={student.id}
+                  className="border-b-0 hover:bg-surface-container-low transition-colors"
+                >
+                  <TableCell className="py-2.5 px-3 text-center [&:has([role=checkbox])]:pr-3">
+                    <Checkbox
+                      checked={isChecked}
+                      onCheckedChange={() => {
+                        if (scope === 'all') {
+                          onScopeChange('selected');
+                          onSelectedChange(
+                            roster
+                              .filter((rosterStudent) => rosterStudent.id !== student.id)
+                              .map((rosterStudent) => rosterStudent.id)
+                          );
+                        } else {
+                          handleToggle(student.id);
+                        }
+                      }}
+                      className="student-checkbox cursor-pointer"
+                      aria-label={`Select ${student.name}`}
+                    />
+                  </TableCell>
+                  <TableCell className="py-2.5 px-3 font-semibold text-primary">
+                    {student.name}
+                  </TableCell>
+                  <TableCell className="py-2.5 px-3 font-label-code text-label-code text-on-surface-variant">
+                    {student.studentId}
+                  </TableCell>
+                  <TableCell className="py-2.5 px-3 font-label-mono-xs text-label-mono-xs uppercase text-on-surface-variant">
+                    {student.section}
+                  </TableCell>
+                  <TableCell className="py-2.5 px-3">
+                    {student.isHonors ? (
+                      <Badge className="font-label-mono-xs text-label-mono-xs px-1.5 py-0.5 bg-secondary-fixed text-on-secondary-fixed border border-secondary uppercase font-semibold rounded-none h-auto">
+                        Honors Track
+                      </Badge>
+                    ) : (
+                      <Badge className="font-label-mono-xs text-label-mono-xs px-1.5 py-0.5 bg-surface-container text-on-surface uppercase rounded-none border-0 h-auto font-normal">
+                        Regular Standing
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-2.5 px-3 text-right">
+                    {isChecked ? (
+                      <span className="font-label-mono-xs text-label-mono-xs text-on-tertiary-container uppercase font-semibold">
+                        ● Allocated
+                      </span>
+                    ) : (
+                      <span className="font-label-mono-xs text-label-mono-xs text-outline uppercase font-semibold">
+                        Exempt / Unassigned
+                      </span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
 
         {/* Table Summary Footbar */}
         <div className="p-space-sm bg-surface-container-high border-t border-outline-variant flex items-center justify-between font-label-mono-xs text-label-mono-xs text-on-surface-variant">

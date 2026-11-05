@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { Assignment } from '../../types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
 
 interface AssignmentCardProps {
   assignment: Assignment;
@@ -11,19 +19,63 @@ interface AssignmentCardProps {
   onCopyDrive?: (url: string) => void;
 }
 
-export const AssignmentCard: React.FC<AssignmentCardProps> = ({
+const DEFAULT_PAGE_SIZE = 5;
+const PAGE_SIZE_OPTIONS = [5, 10, 20] as const;
+
+const getDueStatusBadgeClassName = (statusType: Assignment['dueStatusType']) => {
+  switch (statusType) {
+    case 'urgent':
+      return 'inline-flex items-center gap-1 px-2.5 py-0.5 bg-secondary-fixed text-on-secondary-fixed font-label-mono-xs text-xs font-bold uppercase rounded-none border-0 h-auto';
+    case 'normal':
+      return 'inline-flex items-center gap-1 px-2.5 py-0.5 bg-surface-container text-on-surface font-label-mono-xs text-xs font-medium uppercase border border-outline-variant rounded-none h-auto';
+    default:
+      return 'px-2.5 py-0.5 bg-surface-container text-on-surface-variant font-label-mono-xs text-xs font-semibold uppercase border border-outline-variant rounded-none h-auto';
+  }
+};
+
+export const AssignmentCard = ({
   assignment,
   onEdit,
   onDelete,
   onCopyDrive,
-}) => {
+}: AssignmentCardProps) => {
   const [expandedRoster, setExpandedRoster] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const percentComplete = Math.round(
     (assignment.submittedCount / assignment.totalStudents) * 100
   );
   const pendingCount = assignment.totalStudents - assignment.submittedCount;
+
+  const totalSubmissions = assignment.submissions.length;
+  const totalPages = Math.max(1, Math.ceil(totalSubmissions / pageSize));
+  const activePage = Math.min(currentPage, totalPages);
+  const firstItemIndex = (activePage - 1) * pageSize;
+  const lastItemIndex = Math.min(firstItemIndex + pageSize, totalSubmissions);
+  const visibleSubmissions = assignment.submissions.slice(
+    firstItemIndex,
+    lastItemIndex
+  );
+  const showingRange =
+    totalSubmissions === 0
+      ? 'Showing 0 of 0 students'
+      : `Showing ${firstItemIndex + 1}–${lastItemIndex} of ${totalSubmissions} students`;
+
+  const assignedStudentCount = assignment.assignedStudentIds.length;
+  const isAllStudentsAssigned = assignment.cohortType === 'all';
+  const cohortHeading = isAllStudentsAssigned
+    ? `Assigned Cohort Verification (All ${assignedStudentCount} Students)`
+    : `Assigned Cohort Verification (${assignedStudentCount} Selected Students)`;
+  const cohortScopeLabel = isAllStudentsAssigned
+    ? 'SCOPE: ALL STUDENTS'
+    : 'SCOPE: SELECTIVE COHORT';
+
+  const handlePageSizeChange = (nextPageSize: number) => {
+    setPageSize(nextPageSize);
+    setCurrentPage(1);
+  };
 
   const handleCopyDrive = () => {
     if (onCopyDrive) {
@@ -56,19 +108,9 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
             )}
 
             {assignment.dueStatusBadge && (
-              assignment.dueStatusType === 'urgent' ? (
-                <Badge className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-secondary-fixed text-on-secondary-fixed font-label-mono-xs text-xs font-bold uppercase rounded-none border-0 h-auto">
-                  {assignment.dueStatusBadge}
-                </Badge>
-              ) : assignment.dueStatusType === 'normal' ? (
-                <Badge className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-surface-container text-on-surface font-label-mono-xs text-xs font-medium uppercase border border-outline-variant rounded-none h-auto">
-                  {assignment.dueStatusBadge}
-                </Badge>
-              ) : (
-                <Badge className="px-2.5 py-0.5 bg-surface-container text-on-surface-variant font-label-mono-xs text-xs font-semibold uppercase border border-outline-variant rounded-none h-auto">
-                  {assignment.dueStatusBadge}
-                </Badge>
-              )
+              <Badge className={getDueStatusBadgeClassName(assignment.dueStatusType)}>
+                {assignment.dueStatusBadge}
+              </Badge>
             )}
 
             {assignment.cohortBadgeText && (
@@ -250,80 +292,160 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
                 {assignment.cohortType === 'selected' ? 'groups' : 'format_list_bulleted'}
               </span>
               <h3 className="font-label-mono-sm text-xs font-bold text-on-surface uppercase tracking-wide">
-                {assignment.cohortType === 'selected'
-                  ? 'Assigned Cohort Verification (All 6 Students)'
-                  : 'Student Submission Status (Showing 5 of 28 Enrolled)'}
+                {cohortHeading}
               </h3>
             </div>
             <span className="font-label-mono-xs text-xs text-on-surface-variant uppercase font-medium">
-              {assignment.cohortType === 'selected' ? 'Scope: Selective Cohort' : 'Roster Scope: Section 01'}
+              {cohortScopeLabel}
             </span>
           </div>
 
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-surface-container-high text-on-surface-variant font-label-mono-xs uppercase border-b border-outline-variant">
-                  <th className="py-3 px-6 font-semibold">Student Name</th>
-                  <th className="py-3 px-6 font-semibold">Student ID</th>
-                  <th className="py-3 px-6 font-semibold">Submission Status</th>
-                  <th className="py-3 px-6 font-semibold">Timestamp / Verification</th>
-                  <th className="py-3 px-6 text-right font-semibold">Drive Record</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant font-body-sm text-on-surface">
-                {assignment.submissions.map((sub, index) => (
-                  <tr
-                    key={sub.id}
-                    className={`hover:bg-surface-container-low transition-colors ${
-                      index % 2 === 1 ? 'bg-surface-container-lowest' : ''
-                    }`}
-                  >
-                    <td className="py-3.5 px-6 font-semibold text-on-background">
-                      {sub.name}
-                    </td>
-                    <td className="py-3.5 px-6 font-label-code text-on-surface-variant">
-                      {sub.studentId}
-                    </td>
-                    <td className="py-3.5 px-6">
-                      {sub.status === 'Submitted' ? (
-                        <Badge className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-low text-on-tertiary-container font-label-mono-xs font-bold border border-outline-variant rounded-none h-auto">
-                          <span className="material-symbols-outlined text-[13px]">
-                            check_circle
-                          </span>
-                          Submitted
-                        </Badge>
-                      ) : (
-                        <Badge className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-error-container text-on-error-container font-label-mono-xs font-bold border border-error/20 rounded-none h-auto">
-                          <span className="material-symbols-outlined text-[13px]">
-                            pending
-                          </span>
-                          Not Submitted
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-6 font-label-mono-xs text-on-surface-variant">
-                      {sub.timestamp}
-                    </td>
-                    <td className="py-3.5 px-6 text-right font-label-mono-xs">
-                      {sub.status === 'Submitted' ? (
-                        <a
-                          href={sub.driveRecordUrl || '#'}
-                          className="inline-flex items-center gap-1 font-semibold text-on-surface hover:text-secondary hover:underline"
-                        >
-                          <span>View Submission</span>
-                          <span className="material-symbols-outlined text-[12px]">
-                            arrow_forward
-                          </span>
-                        </a>
-                      ) : (
-                        <span className="text-on-surface-variant">Awaiting Upload</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <Table className="w-full text-left border-collapse text-xs">
+            <TableHeader>
+              <TableRow className="bg-surface-container-high text-on-surface-variant font-label-mono-xs uppercase border-b border-outline-variant hover:bg-surface-container-high">
+                <TableHead className="h-auto py-3 px-6 font-semibold text-on-surface-variant">
+                  Student Name
+                </TableHead>
+                <TableHead className="h-auto py-3 px-6 font-semibold text-on-surface-variant">
+                  Student ID
+                </TableHead>
+                <TableHead className="h-auto py-3 px-6 font-semibold text-on-surface-variant">
+                  Submission Status
+                </TableHead>
+                <TableHead className="h-auto py-3 px-6 font-semibold text-on-surface-variant">
+                  Timestamp / Verification
+                </TableHead>
+                <TableHead className="h-auto py-3 px-6 text-right font-semibold text-on-surface-variant">
+                  Drive Record
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-outline-variant font-body-sm text-on-surface">
+              {visibleSubmissions.map((submission, index) => (
+                <TableRow
+                  key={submission.id}
+                  className={`border-b-0 hover:bg-surface-container-low transition-colors ${
+                    (firstItemIndex + index) % 2 === 1
+                      ? 'bg-surface-container-lowest'
+                      : ''
+                  }`}
+                >
+                  <TableCell className="py-3.5 px-6 font-semibold text-on-background">
+                    {submission.name}
+                  </TableCell>
+                  <TableCell className="py-3.5 px-6 font-label-code text-on-surface-variant">
+                    {submission.studentId}
+                  </TableCell>
+                  <TableCell className="py-3.5 px-6">
+                    {submission.status === 'Submitted' ? (
+                      <Badge className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-low text-on-tertiary-container font-label-mono-xs font-bold border border-outline-variant rounded-none h-auto">
+                        <span className="material-symbols-outlined text-[13px]">
+                          check_circle
+                        </span>
+                        Submitted
+                      </Badge>
+                    ) : (
+                      <Badge className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-error-container text-on-error-container font-label-mono-xs font-bold border border-error/20 rounded-none h-auto">
+                        <span className="material-symbols-outlined text-[13px]">
+                          pending
+                        </span>
+                        Not Submitted
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-3.5 px-6 font-label-mono-xs text-on-surface-variant">
+                    {submission.timestamp}
+                  </TableCell>
+                  <TableCell className="py-3.5 px-6 text-right font-label-mono-xs">
+                    {submission.status === 'Submitted' ? (
+                      <a
+                        href={submission.driveRecordUrl || '#'}
+                        className="inline-flex items-center gap-1 font-semibold text-on-surface hover:text-secondary hover:underline"
+                      >
+                        <span>View Submission</span>
+                        <span className="material-symbols-outlined text-[12px]">
+                          arrow_forward
+                        </span>
+                      </a>
+                    ) : (
+                      <span className="text-on-surface-variant">Awaiting Upload</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <div className="px-6 py-3 bg-surface-container-low border-t border-outline-variant flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs font-label-mono-xs text-on-surface-variant">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 uppercase">
+              <span>{showingRange}</span>
+              <span className="text-outline-variant hidden sm:inline">•</span>
+              <span>
+                Page {activePage} of {totalPages}
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <label className="flex items-center gap-1.5 uppercase">
+                <span>Rows per page</span>
+                <select
+                  value={pageSize}
+                  onChange={(event) =>
+                    handlePageSizeChange(Number(event.target.value))
+                  }
+                  aria-label="Rows per page"
+                  className="bg-surface-container-lowest border border-outline-variant px-1.5 py-0.5 font-label-mono-xs text-xs text-on-surface focus:outline-none focus:border-primary rounded-none cursor-pointer"
+                >
+                  {PAGE_SIZE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="flex flex-wrap items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCurrentPage(Math.max(1, activePage - 1))}
+                  disabled={activePage === 1}
+                  className="px-2 py-1 bg-surface-container-lowest border border-outline-variant text-on-surface uppercase font-semibold hover:bg-surface-container transition-colors cursor-pointer rounded-none h-auto shadow-none font-label-mono-xs text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </Button>
+
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                  (page) => (
+                    <Button
+                      key={page}
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCurrentPage(page)}
+                      aria-label={`Go to page ${page}`}
+                      aria-current={activePage === page ? 'page' : undefined}
+                      className={`px-2 py-1 border font-semibold uppercase transition-colors cursor-pointer rounded-none h-auto shadow-none font-label-mono-xs text-xs ${
+                        activePage === page
+                          ? 'bg-primary text-on-primary border-primary'
+                          : 'bg-surface-container-lowest border-outline-variant text-on-surface hover:bg-surface-container'
+                      }`}
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCurrentPage(Math.min(totalPages, activePage + 1))}
+                  disabled={activePage === totalPages}
+                  className="px-2 py-1 bg-surface-container-lowest border border-outline-variant text-on-surface uppercase font-semibold hover:bg-surface-container transition-colors cursor-pointer rounded-none h-auto shadow-none font-label-mono-xs text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </div>
 
           {assignment.code === 'CS101-ASN-003' && (
