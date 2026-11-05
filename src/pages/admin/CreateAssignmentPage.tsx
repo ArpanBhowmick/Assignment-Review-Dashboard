@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Assignment, RosterStudent } from '../../types';
+import { getScopedStudents } from '../../lib/assignmentScope';
 import { RosterSelectionTable } from '../../components/admin/RosterSelectionTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -69,6 +70,13 @@ export const CreateAssignmentPage = ({
       return;
     }
 
+    const assignedStudents = getScopedStudents(scope, selectedStudentIds, roster);
+
+    if (scope === 'selected' && assignedStudents.length === 0) {
+      alert('Please select at least one student for the restricted cohort.');
+      return;
+    }
+
     const newAssignment: Assignment = {
       id: `CS101-ASN-${Math.floor(100 + Math.random() * 900)}`,
       code: `CS101-ASN-${Math.floor(100 + Math.random() * 900)}`,
@@ -83,16 +91,12 @@ export const CreateAssignmentPage = ({
       cohortType: scope,
       cohortBadgeText:
         scope === 'selected'
-          ? `Restricted Cohort (${selectedStudentIds.length} Students)`
+          ? `Restricted Cohort (${assignedStudents.length} Students)`
           : undefined,
-      totalStudents: scope === 'all' ? 28 : selectedStudentIds.length,
+      totalStudents: assignedStudents.length,
       submittedCount: 0,
-      assignedStudentIds:
-        scope === 'all' ? roster.map((student) => student.id) : selectedStudentIds,
-      submissions: (scope === 'all'
-        ? roster
-        : roster.filter((student) => selectedStudentIds.includes(student.id))
-      ).map((student) => ({
+      assignedStudentIds: assignedStudents.map((student) => student.id),
+      submissions: assignedStudents.map((student) => ({
         id: `sub-${student.id}`,
         name: student.name,
         studentId: student.studentId,
@@ -109,15 +113,15 @@ export const CreateAssignmentPage = ({
   };
 
   return (
-    <div className="max-w-[1280px] mx-auto px-gutter py-space-lg">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-gutter py-4 sm:py-space-lg">
         <div className="flex flex-col w-full">
         {/* Top Academic Context Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-lg mb-space-lg border-b border-outline-variant">
           <div className="flex flex-col gap-space-xs">
-            <h1 className="font-headline-xl text-headline-xl text-primary tracking-tight font-bold">
+            <h1 className="font-headline-xl text-2xl sm:text-headline-xl text-primary tracking-tight font-bold">
               Create Assignment
             </h1>
-            <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl leading-relaxed">
+            <p className="font-body-md text-sm sm:text-body-md text-on-surface-variant max-w-2xl leading-relaxed">
               Configure submission parameters, deadline, external Drive repository, and student cohort scope for CS101.
             </p>
           </div>
@@ -126,8 +130,8 @@ export const CreateAssignmentPage = ({
         {/* Form Architecture Container */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-space-xl">
           {/* SECTION 01: Core Directives & Specifications */}
-          <section className="bg-surface-container-lowest border border-outline-variant p-space-lg flex flex-col gap-space-lg">
-            <div className="flex items-center justify-between border-b border-outline-variant pb-space-sm">
+          <section className="bg-surface-container-lowest border border-outline-variant p-4 sm:p-space-lg flex flex-col gap-space-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-outline-variant pb-space-sm gap-2">
               <div className="flex items-center gap-space-sm">
                 <Badge className="font-label-mono-xs text-label-mono-xs bg-primary text-on-primary px-space-xs py-0.5 font-bold rounded-none border-0 h-auto">
                   SEC 01
@@ -136,7 +140,7 @@ export const CreateAssignmentPage = ({
                   CORE DIRECTIVES &amp; SPECIFICATIONS
                 </h2>
               </div>
-              <span className="font-label-mono-xs text-label-mono-xs text-on-surface-variant uppercase tracking-wider">
+              <span className="font-label-mono-xs text-label-mono-xs text-on-surface-variant uppercase tracking-wider self-start sm:self-auto">
                 MANDATORY PROTOCOL FIELDSET
               </span>
             </div>
@@ -171,7 +175,7 @@ export const CreateAssignmentPage = ({
 
             {/* Field: Assignment Description & Instructions */}
             <div className="flex flex-col gap-space-xs">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-0">
                 <Label
                   htmlFor="assignment-desc"
                   className="font-label-mono-xs text-label-mono-xs uppercase text-on-surface font-semibold tracking-wider"
@@ -197,7 +201,7 @@ export const CreateAssignmentPage = ({
                 placeholder="Draft assignment specifications, expected deliverable schema, academic integrity expectations, and citation requirements..."
                 className="w-full bg-surface border border-outline-variant p-space-md font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary transition-colors resize-y leading-relaxed rounded-none"
               />
-              <div className="flex items-center justify-between pt-0.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-0.5">
                 <span className="font-label-mono-xs text-label-mono-xs text-on-surface-variant uppercase">
                   INSTRUCTION HELPER: INCLUDE CLEAR CRITERIA FOR PEER REVIEW AUDIT &amp; BENCHMARKS
                 </span>
@@ -205,7 +209,7 @@ export const CreateAssignmentPage = ({
                   type="button"
                   variant="ghost"
                   onClick={handleInsertBoilerplate}
-                  className="font-label-mono-xs text-label-mono-xs text-secondary hover:underline uppercase flex items-center gap-1 cursor-pointer p-0 h-auto font-normal rounded-none shadow-none"
+                  className="font-label-mono-xs text-label-mono-xs text-secondary hover:underline uppercase flex items-center gap-1 cursor-pointer p-0 h-auto font-normal rounded-none shadow-none self-start sm:self-auto"
                 >
                   <span className="material-symbols-outlined text-[14px]">history_edu</span>
                   <span>Insert Standard Rubric Boilerplate</span>
@@ -221,7 +225,7 @@ export const CreateAssignmentPage = ({
                   <span className="material-symbols-outlined text-[15px] text-secondary">schedule</span>
                   Submission Cutoff Deadline (EST / UTC-05) <span className="text-error">*</span>
                 </span>
-                <div className="grid grid-cols-2 gap-space-sm pt-space-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-sm pt-space-xs">
                   <div>
                     <Label
                       htmlFor="due-date"
@@ -280,7 +284,7 @@ export const CreateAssignmentPage = ({
                     Linked &amp; Verified
                   </Badge>
                 </div>
-                <div className="flex items-center gap-space-xs pt-space-xs">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-space-xs pt-space-xs">
                   <div className="relative flex-1">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                       <span className="material-symbols-outlined text-[16px] text-on-surface-variant">link</span>
@@ -299,7 +303,7 @@ export const CreateAssignmentPage = ({
                     type="button"
                     variant="outline"
                     onClick={handleTestDrive}
-                    className="shrink-0 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant px-space-md py-1.5 font-label-mono-xs text-label-mono-xs uppercase tracking-wider text-on-surface font-semibold transition-colors flex items-center gap-1 cursor-pointer rounded-none h-auto shadow-none font-normal"
+                    className="shrink-0 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant px-space-md py-1.5 font-label-mono-xs text-label-mono-xs uppercase tracking-wider text-on-surface font-semibold transition-colors flex items-center justify-center gap-1 cursor-pointer rounded-none h-auto shadow-none font-normal"
                   >
                     <span className="material-symbols-outlined text-[14px]">open_in_new</span>
                     <span>Test Drive Folder ↗</span>
@@ -323,8 +327,8 @@ export const CreateAssignmentPage = ({
           />
 
           {/* Operational Sticky Bottom Action Bar */}
-          <div className="sticky bottom-0 z-40 bg-surface-container-lowest border-t-2 border-primary py-space-md px-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-md shadow-sm">
-            <div className="flex items-center gap-space-sm w-full sm:w-auto justify-end">
+          <div className="sticky bottom-0 z-40 bg-surface-container-lowest border-t-2 border-primary py-space-md px-4 sm:px-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-md shadow-sm">
+            <div className="flex flex-wrap items-center gap-space-sm w-full sm:w-auto justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -356,8 +360,8 @@ export const CreateAssignmentPage = ({
 
         {/* Status Toast Simulation */}
         {toastMessage && (
-          <div className="fixed bottom-20 right-6 z-50 bg-primary text-on-primary p-space-md border border-outline-variant shadow-xl max-w-sm flex items-start gap-space-sm animate-in fade-in slide-in-from-bottom-4">
-            <span className="material-symbols-outlined text-tertiary-fixed text-[20px]">
+          <div className="fixed bottom-20 left-4 right-4 sm:left-auto sm:right-6 z-50 bg-primary text-on-primary p-space-md border border-outline-variant shadow-xl sm:max-w-sm flex items-start gap-space-sm animate-in fade-in slide-in-from-bottom-4">
+            <span className="material-symbols-outlined text-tertiary-fixed text-[20px] shrink-0">
               check_circle
             </span>
             <div className="flex flex-col">

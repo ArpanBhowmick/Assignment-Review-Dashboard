@@ -6,6 +6,7 @@ import {
   getStudentSubmission,
   getStudentAssignmentStatus,
   getStudentFolderFormat,
+  isAssignmentAssignedToStudent,
   createSubmissionTimestamp,
 } from '../../components/student/studentUtils';
 import { Badge } from '@/components/ui/badge';
@@ -67,9 +68,12 @@ export const AssignmentDetailsPage = ({
   const [justSubmitted, setJustSubmitted] = useState(false);
 
   const assignment = assignments.find((a) => a.id === id);
+  const canAccessAssignment = assignment
+    ? isAssignmentAssignedToStudent(assignment, currentStudent)
+    : false;
 
-  // If assignment is not found
-  if (!assignment) {
+  // If assignment is missing or not assigned to the current student
+  if (!assignment || !canAccessAssignment) {
     return (
       <div className="max-w-3xl mx-auto py-space-xl text-center">
         <span className="material-symbols-outlined text-[48px] text-error mb-2">
@@ -79,7 +83,7 @@ export const AssignmentDetailsPage = ({
           Assignment Not Found
         </h1>
         <p className="font-body-md text-body-md text-on-surface-variant mb-space-lg">
-          The requested assignment spec could not be found or has been archived from CS101 registry.
+          The requested assignment spec could not be found or is not assigned to your account.
         </p>
         <Link
           to="/student/dashboard"
@@ -120,6 +124,11 @@ export const AssignmentDetailsPage = ({
   };
 
   const handleConfirmSubmit = () => {
+    if (!isAssignmentAssignedToStudent(assignment, currentStudent)) {
+      setIsModalOpen(false);
+      return;
+    }
+
     const timestamp = createSubmissionTimestamp();
     onSubmitAssignment(assignment.id, timestamp);
     setJustSubmitted(true);
@@ -127,7 +136,7 @@ export const AssignmentDetailsPage = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col gap-space-lg py-space-lg pb-space-xl">
+    <div className="max-w-3xl mx-auto px-4 sm:px-0 flex flex-col gap-space-lg py-4 sm:py-space-lg pb-space-xl">
       {/* Back Bar & Status Header Ribbon */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pt-space-xs pb-space-xs border-b border-surface-dim">
         <Link
@@ -150,10 +159,10 @@ export const AssignmentDetailsPage = ({
 
       {/* Page Title Header */}
       <div>
-        <h1 className="font-headline-xl text-headline-xl text-on-surface tracking-tight mb-1">
+        <h1 className="font-headline-xl text-2xl sm:text-headline-xl text-on-surface tracking-tight mb-1">
           Assignment Details &amp; Submission
         </h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">
+        <p className="font-body-md text-sm sm:text-body-md text-on-surface-variant">
           Review assignment instructions, submit your work to the designated Google Drive folder, and confirm submission.
         </p>
       </div>
@@ -178,7 +187,7 @@ export const AssignmentDetailsPage = ({
       )}
 
       {/* CARD 1: Assignment Information */}
-      <section className="bg-surface-container-lowest p-space-lg rounded-DEFAULT border border-surface-dim">
+      <section className="bg-surface-container-lowest p-4 sm:p-space-lg rounded-DEFAULT border border-surface-dim">
         <div className="flex flex-wrap items-center justify-between gap-space-sm mb-space-sm pb-space-sm border-b border-surface-dim">
           <div className="flex items-center gap-space-xs">
             <Badge className="font-label-code text-label-code px-space-xs py-0.5 bg-primary text-on-primary rounded-DEFAULT uppercase font-semibold border-0 h-auto">
@@ -196,7 +205,7 @@ export const AssignmentDetailsPage = ({
           </Badge>
         </div>
 
-        <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight mb-space-md">
+        <h2 className="font-headline-lg text-xl sm:text-headline-lg font-bold text-on-surface tracking-tight mb-space-md">
           {assignment.title}
         </h2>
 
@@ -227,7 +236,7 @@ export const AssignmentDetailsPage = ({
           <h3 className="font-label-mono-xs text-label-mono-xs uppercase tracking-wider text-on-surface-variant font-semibold mb-space-xs">
             Assignment Description
           </h3>
-          <p className="font-body-md text-body-md text-on-surface leading-relaxed bg-surface-container-low p-space-md rounded-DEFAULT">
+          <p className="font-body-md text-sm sm:text-body-md text-on-surface leading-relaxed bg-surface-container-low p-space-md rounded-DEFAULT">
             {assignment.description}
           </p>
         </div>
@@ -242,7 +251,7 @@ export const AssignmentDetailsPage = ({
       </section>
 
       {/* CARD 2: External Submission Repository (Google Drive) */}
-      <section className="bg-surface-container-lowest p-space-lg rounded-DEFAULT border border-surface-dim">
+      <section className="bg-surface-container-lowest p-4 sm:p-space-lg rounded-DEFAULT border border-surface-dim">
         <div className="flex items-center gap-space-xs mb-space-xs">
           <span className="material-symbols-outlined text-[20px] text-secondary">
             cloud_upload
@@ -251,7 +260,7 @@ export const AssignmentDetailsPage = ({
             Submission Repository (Google Drive)
           </h2>
         </div>
-        <p className="font-body-md text-body-md text-on-surface-variant mb-space-md">
+        <p className="font-body-md text-sm sm:text-body-md text-on-surface-variant mb-space-md">
           Upload your completed deliverables (compiled PDF and source code archive) to your assigned subfolder in the Google Drive folder linked below.
         </p>
 
@@ -259,7 +268,7 @@ export const AssignmentDetailsPage = ({
         <div className="bg-surface-container-low p-space-md rounded-DEFAULT">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-space-sm">
             <div className="flex-1 bg-surface-container-lowest border border-surface-dim px-space-md py-2.5 rounded-DEFAULT font-label-code text-label-code text-on-surface truncate flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px] text-outline">
+              <span className="material-symbols-outlined text-[16px] text-outline shrink-0">
                 folder_shared
               </span>
               <span className="truncate">{assignment.driveUrl}</span>
@@ -275,10 +284,10 @@ export const AssignmentDetailsPage = ({
             </a>
           </div>
           <div className="flex items-center gap-1.5 text-on-surface-variant font-label-mono-xs text-label-mono-xs mt-space-sm">
-            <span className="material-symbols-outlined text-[14px] text-outline">
+            <span className="material-symbols-outlined text-[14px] text-outline shrink-0">
               info
             </span>
-            <span>
+            <span className="break-all sm:break-normal">
               Subfolder naming standard:{' '}
               <strong className="font-semibold text-on-surface">{subfolderStandard}</strong>
             </span>
@@ -287,7 +296,7 @@ export const AssignmentDetailsPage = ({
       </section>
 
       {/* CARD 3: Finalize & Confirm Submission Action */}
-      <section className="bg-surface-container-lowest p-space-lg rounded-DEFAULT border border-surface-dim">
+      <section className="bg-surface-container-lowest p-4 sm:p-space-lg rounded-DEFAULT border border-surface-dim">
         <div className="flex items-center gap-space-xs mb-space-xs">
           <span className="material-symbols-outlined text-[20px] text-primary">
             task_alt

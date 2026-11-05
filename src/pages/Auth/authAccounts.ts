@@ -1,3 +1,5 @@
+import type { RosterStudent } from '../../types';
+
 export type UserRole = 'student' | 'admin';
 
 export interface UserAccount {
@@ -6,6 +8,7 @@ export interface UserAccount {
   initials: string;
   role: UserRole;
   subtitle: string;
+  rosterStudentId?: string;
 }
 
 export const SEEDED_STUDENT_ACCOUNTS: UserAccount[] = [
@@ -14,6 +17,7 @@ export const SEEDED_STUDENT_ACCOUNTS: UserAccount[] = [
     name: 'Alex Doe',
     initials: 'AD',
     role: 'student',
+    rosterStudentId: '6',
     subtitle: 'CS Undergrad · Enrolled: CS101 Distributed Systems',
   },
   {
@@ -21,6 +25,7 @@ export const SEEDED_STUDENT_ACCOUNTS: UserAccount[] = [
     name: 'Liam Chen',
     initials: 'LC',
     role: 'student',
+    rosterStudentId: '1',
     subtitle: 'CS Undergrad · Enrolled: CS101 Distributed Systems',
   },
   {
@@ -28,6 +33,7 @@ export const SEEDED_STUDENT_ACCOUNTS: UserAccount[] = [
     name: 'Maya Patel',
     initials: 'MP',
     role: 'student',
+    rosterStudentId: '2',
     subtitle: 'CS Undergrad · Honors Track',
   },
   {
@@ -35,6 +41,7 @@ export const SEEDED_STUDENT_ACCOUNTS: UserAccount[] = [
     name: 'Lucas Romero',
     initials: 'LR',
     role: 'student',
+    rosterStudentId: '3',
     subtitle: 'CS Undergrad · Regular Standing',
   },
   {
@@ -42,6 +49,7 @@ export const SEEDED_STUDENT_ACCOUNTS: UserAccount[] = [
     name: 'Zoe Washington',
     initials: 'ZW',
     role: 'student',
+    rosterStudentId: '4',
     subtitle: 'CS Undergrad · Regular Standing',
   },
 ];
@@ -62,3 +70,16 @@ export const SEEDED_ADMIN_ACCOUNTS: UserAccount[] = [
     subtitle: 'Associate Professor · CS101 Distributed Systems',
   },
 ];
+
+export const resolveStudentForAccount = (
+  account: UserAccount | null,
+  roster: RosterStudent[]
+): RosterStudent | null => {
+  if (!account || account.role !== 'student' || !account.rosterStudentId) {
+    return null;
+  }
+
+  return (
+    roster.find((student) => student.id === account.rosterStudentId) ?? null
+  );
+};

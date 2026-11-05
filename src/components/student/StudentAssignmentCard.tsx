@@ -1,28 +1,22 @@
 import { useNavigate } from 'react-router-dom';
-import type { Assignment } from '../../types';
+import type { Assignment, RosterStudent } from '../../types';
 import { getStudentSubmission, getStudentAssignmentStatus } from './studentUtils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 export interface StudentAssignmentCardProps {
   assignment: Assignment;
-  currentStudentId: string;
+  currentStudent: RosterStudent;
 }
 
 export const StudentAssignmentCard = ({
   assignment,
-  currentStudentId,
+  currentStudent,
 }: StudentAssignmentCardProps) => {
   const navigate = useNavigate();
 
-  const studentReference = {
-    id: currentStudentId,
-    studentId: '#STU-4819',
-    name: 'Alex Doe',
-  };
-
-  const studentSubmission = getStudentSubmission(assignment, studentReference);
-  const status = getStudentAssignmentStatus(assignment, studentReference);
+  const studentSubmission = getStudentSubmission(assignment, currentStudent);
+  const status = getStudentAssignmentStatus(assignment, currentStudent);
 
   const isSubmitted = status === 'submitted';
   const isOverdue = status === 'overdue';
@@ -43,7 +37,7 @@ export const StudentAssignmentCard = ({
   };
 
   return (
-    <article className="bg-surface-container-lowest p-space-lg shadow-sm hover:shadow-md transition-shadow">
+    <article className="bg-surface-container-lowest p-4 sm:p-space-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-space-md">
         <div className="flex-1">
           {/* Metadata Badges */}
@@ -84,10 +78,10 @@ export const StudentAssignmentCard = ({
           </div>
 
           {/* Title & Description */}
-          <h2 className="font-headline-lg text-headline-lg text-primary tracking-tight mb-space-xs">
+          <h2 className="font-headline-lg text-xl sm:text-headline-lg text-primary tracking-tight mb-space-xs">
             {assignment.title}
           </h2>
-          <p className="font-body-md text-body-md text-on-surface-variant max-w-4xl mb-space-md">
+          <p className="font-body-md text-sm sm:text-body-md text-on-surface-variant max-w-4xl mb-space-md">
             {assignment.description}
           </p>
 
@@ -173,21 +167,21 @@ export const StudentAssignmentCard = ({
         </div>
 
         {/* Action & Status Column */}
-        <div className="flex lg:flex-col items-center lg:items-end justify-between lg:justify-start gap-space-md shrink-0 lg:min-w-[240px]">
+        <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between lg:justify-start gap-space-md shrink-0 lg:min-w-[240px]">
           {/* Status Badge */}
           {isOverdue ? (
-            <Badge className="inline-flex items-center gap-1.5 px-space-sm py-1 bg-error-container text-on-error-container font-label-mono-xs text-label-mono-xs uppercase tracking-wider font-bold rounded-none border-0 h-auto">
+            <Badge className="inline-flex items-center gap-1.5 px-space-sm py-1 bg-error-container text-on-error-container font-label-mono-xs text-label-mono-xs uppercase tracking-wider font-bold rounded-none border-0 h-auto self-start sm:self-auto">
               <span className="w-1.5 h-1.5 rounded-full bg-error" />
               OVERDUE / UNRESOLVED
             </Badge>
           ) : isSubmitted ? (
-            <div className="flex flex-col items-end">
+            <div className="flex flex-col items-start sm:items-end">
               <Badge className="inline-flex items-center gap-1.5 px-space-sm py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-mono-xs text-label-mono-xs uppercase tracking-wider font-bold rounded-none border-0 h-auto">
                 <span className="w-1.5 h-1.5 rounded-full bg-on-tertiary-container" />
                 {isGraded ? 'SUBMITTED & SEALED' : 'SUBMITTED'}
               </Badge>
               {studentSubmission?.timestamp && (
-                <span className="mt-1 text-right font-label-mono-xs text-label-mono-xs text-on-surface-variant">
+                <span className="mt-1 text-left sm:text-right font-label-mono-xs text-label-mono-xs text-on-surface-variant">
                   {studentSubmission.timestamp.startsWith('Submitted')
                     ? studentSubmission.timestamp
                     : `Submitted on ${studentSubmission.timestamp}`}
@@ -195,14 +189,14 @@ export const StudentAssignmentCard = ({
               )}
             </div>
           ) : (
-            <Badge className="inline-flex items-center gap-1.5 px-space-sm py-1 bg-secondary-fixed text-on-secondary-fixed-variant font-label-mono-xs text-label-mono-xs uppercase tracking-wider font-bold rounded-none border-0 h-auto">
+            <Badge className="inline-flex items-center gap-1.5 px-space-sm py-1 bg-secondary-fixed text-on-secondary-fixed-variant font-label-mono-xs text-label-mono-xs uppercase tracking-wider font-bold rounded-none border-0 h-auto self-start sm:self-auto">
               <span className="w-2 h-2 rounded-full bg-secondary-container" />
               PENDING SUBMISSION
             </Badge>
           )}
 
           {/* Action Button */}
-          <div className="w-full text-right">
+          <div className="w-full text-left sm:text-right">
             <Button
               type="button"
               variant={!isSubmitted && !isOverdue ? 'default' : 'outline'}
@@ -218,7 +212,7 @@ export const StudentAssignmentCard = ({
             </Button>
 
             {!isSubmitted && !isOverdue && (
-              <span className="block mt-1 text-right font-label-mono-xs text-label-mono-xs text-on-surface-variant">
+              <span className="block mt-1 text-left sm:text-right font-label-mono-xs text-label-mono-xs text-on-surface-variant">
                 External Google Drive sync required
               </span>
             )}

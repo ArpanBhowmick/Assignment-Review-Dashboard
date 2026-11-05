@@ -32,7 +32,7 @@ export const SubmissionConfirmModal = ({
     >
       <AlertDialogContent
         overlayClassName="bg-inverse-surface/60 backdrop-blur-sm"
-        className="!max-w-lg w-full !rounded-DEFAULT bg-surface-container-lowest p-space-lg border border-surface-dim flex flex-col gap-space-md shadow-lg !ring-0 !gap-0"
+        className="!max-w-lg w-[calc(100%-2rem)] sm:w-full !rounded-DEFAULT bg-surface-container-lowest p-4 sm:p-space-lg border border-surface-dim flex flex-col gap-space-md shadow-lg !ring-0 !gap-0"
       >
         {/* Modal Header */}
         <div className="flex items-start justify-between pb-space-xs border-b border-surface-dim">

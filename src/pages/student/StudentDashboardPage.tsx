@@ -78,7 +78,7 @@ export const StudentDashboardPage = ({
   return (
     <div className="flex flex-col w-full py-space-lg">
       {/* Top Academic Context Header & Telemetry */}
-      <section className="bg-surface-container-lowest p-space-lg md:p-space-xl shadow-sm mb-space-lg">
+      <section className="bg-surface-container-lowest p-4 sm:p-space-lg md:p-space-xl shadow-sm mb-space-lg">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-space-lg">
           {/* Title & Academic Ledger Info */}
           <div className="max-w-2xl">
@@ -94,18 +94,18 @@ export const StudentDashboardPage = ({
                 {currentStudent.studentId}
               </span>
             </div>
-            <h1 className="font-headline-xl text-headline-xl text-primary tracking-tight mb-space-xs">
+            <h1 className="font-headline-xl text-2xl sm:text-headline-xl text-primary tracking-tight mb-space-xs">
               My Enrolled Assignments
             </h1>
-            <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+            <p className="font-body-md text-sm sm:text-body-md text-on-surface-variant leading-relaxed">
               Track your assigned deliverables, submit project repositories via external Google Drive folders, and monitor your personal completion cadence across the active semester term.
             </p>
           </div>
 
           {/* Cadence Telemetry Block */}
-          <div className="w-full lg:w-96 bg-surface-container-low p-space-md flex flex-col justify-between">
+          <div className="w-full lg:w-96 bg-surface-container-low p-3.5 sm:p-space-md flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between font-label-mono-xs text-label-mono-xs mb-1.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between font-label-mono-xs text-label-mono-xs mb-1.5 gap-0.5 sm:gap-0">
                 <span className="uppercase tracking-wider font-semibold text-on-surface">
                   OVERALL COMPLETION
                 </span>
@@ -174,8 +174,8 @@ export const StudentDashboardPage = ({
         </div>
 
         {/* View Filter Buttons */}
-        <div className="mt-space-md flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-low px-space-md py-space-sm">
-          <div className="flex flex-wrap items-center gap-space-xs">
+        <div className="mt-space-md flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-low px-3 sm:px-space-md py-2.5 sm:py-space-sm">
+          <div className="flex flex-wrap items-center gap-1 sm:gap-space-xs">
             <span className="font-label-mono-xs text-label-mono-xs text-on-surface-variant uppercase font-semibold">
               VIEW FILTER:
             </span>
@@ -229,12 +229,12 @@ export const StudentDashboardPage = ({
             </Button>
           </div>
 
-          <div className="flex items-center gap-space-sm font-label-mono-xs text-label-mono-xs text-on-surface-variant">
+          <div className="flex flex-wrap items-center gap-space-sm font-label-mono-xs text-label-mono-xs text-on-surface-variant">
             <span className="flex items-center gap-1">
-              <span className="inline-block w-1.5 h-1.5 bg-secondary-container rounded-full" />
-              AUDIT LOG: SYNCED
+              <span className="inline-block w-1.5 h-1.5 bg-secondary-container rounded-full shrink-0" />
+              <span>AUDIT LOG: SYNCED</span>
             </span>
-            <span className="text-outline">|</span>
+            <span className="text-outline hidden sm:inline">|</span>
             <span>INDEXING: DIRECTORY_V2</span>
           </div>
         </div>
@@ -247,11 +247,11 @@ export const StudentDashboardPage = ({
             <StudentAssignmentCard
               key={assignment.id}
               assignment={assignment}
-              currentStudentId={currentStudent.id}
+              currentStudent={currentStudent}
             />
           ))
         ) : (
-          <div className="bg-surface-container-lowest p-space-xl text-center border border-surface-dim">
+          <div className="bg-surface-container-lowest p-6 sm:p-space-xl text-center border border-surface-dim">
             <span className="material-symbols-outlined text-[36px] text-outline mb-2">
               task_alt
             </span>
@@ -279,7 +279,7 @@ export const StudentDashboardPage = ({
       </section>
 
       {/* External Drive Verification & Institutional Protocol Callout */}
-      <section className="bg-surface-container-low p-space-lg mb-space-lg">
+      <section className="bg-surface-container-low p-4 sm:p-space-lg mb-space-lg">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
           <div className="flex items-start gap-space-md">
             <div className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center shrink-0">

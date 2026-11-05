@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import type { Assignment } from '../../types';
+import type { Assignment, RosterStudent } from '../../types';
+import {
+  getAssignmentSummary,
+  getCohortBadgeText,
+} from '../../lib/assignmentScope';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -14,6 +18,7 @@ import {
 
 interface AssignmentCardProps {
   assignment: Assignment;
+  roster: RosterStudent[];
   onEdit: (assignment: Assignment) => void;
   onDelete: (assignment: Assignment) => void;
   onCopyDrive?: (url: string) => void;
@@ -35,6 +40,7 @@ const getDueStatusBadgeClassName = (statusType: Assignment['dueStatusType']) => 
 
 export const AssignmentCard = ({
   assignment,
+  roster,
   onEdit,
   onDelete,
   onCopyDrive,
@@ -44,17 +50,21 @@ export const AssignmentCard = ({
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const percentComplete = Math.round(
-    (assignment.submittedCount / assignment.totalStudents) * 100
-  );
-  const pendingCount = assignment.totalStudents - assignment.submittedCount;
+  const {
+    assignedStudents,
+    activeSubmissions,
+    totalStudents,
+    submittedCount,
+    pendingCount,
+    percentComplete,
+  } = getAssignmentSummary(assignment, roster);
 
-  const totalSubmissions = assignment.submissions.length;
+  const totalSubmissions = activeSubmissions.length;
   const totalPages = Math.max(1, Math.ceil(totalSubmissions / pageSize));
   const activePage = Math.min(currentPage, totalPages);
   const firstItemIndex = (activePage - 1) * pageSize;
   const lastItemIndex = Math.min(firstItemIndex + pageSize, totalSubmissions);
-  const visibleSubmissions = assignment.submissions.slice(
+  const visibleSubmissions = activeSubmissions.slice(
     firstItemIndex,
     lastItemIndex
   );
@@ -63,7 +73,7 @@ export const AssignmentCard = ({
       ? 'Showing 0 of 0 students'
       : `Showing ${firstItemIndex + 1}–${lastItemIndex} of ${totalSubmissions} students`;
 
-  const assignedStudentCount = assignment.assignedStudentIds.length;
+  const assignedStudentCount = assignedStudents.length;
   const isAllStudentsAssigned = assignment.cohortType === 'all';
   const cohortHeading = isAllStudentsAssigned
     ? `Assigned Cohort Verification (All ${assignedStudentCount} Students)`
@@ -71,6 +81,11 @@ export const AssignmentCard = ({
   const cohortScopeLabel = isAllStudentsAssigned
     ? 'SCOPE: ALL STUDENTS'
     : 'SCOPE: SELECTIVE COHORT';
+  const cohortBadgeText = getCohortBadgeText(
+    assignment.cohortType,
+    assignedStudentCount,
+    assignment.cohortBadgeText
+  );
 
   const handlePageSizeChange = (nextPageSize: number) => {
     setPageSize(nextPageSize);
@@ -94,7 +109,7 @@ export const AssignmentCard = ({
       }`}
     >
       {/* Top Card Header */}
-      <div className="p-6 border-b border-outline-variant flex flex-col lg:flex-row lg:items-start justify-between gap-4 bg-surface-container-lowest">
+      <div className="p-4 sm:p-6 border-b border-outline-variant flex flex-col lg:flex-row lg:items-start justify-between gap-4 bg-surface-container-lowest">
         <div className="flex flex-col gap-2.5 max-w-3xl">
           <div className="flex flex-wrap items-center gap-2">
             {assignment.code === 'CS101-ASN-003' ? (
@@ -113,14 +128,14 @@ export const AssignmentCard = ({
               </Badge>
             )}
 
-            {assignment.cohortBadgeText && (
+            {cohortBadgeText && (
               assignment.cohortType === 'selected' ? (
                 <Badge className="px-2.5 py-0.5 bg-secondary-fixed text-on-secondary-fixed font-label-mono-xs text-xs font-bold uppercase rounded-none border-0 h-auto">
-                  {assignment.cohortBadgeText}
+                  {cohortBadgeText}
                 </Badge>
               ) : (
                 <span className="font-label-mono-xs text-xs text-on-surface-variant uppercase font-medium">
-                  • {assignment.cohortBadgeText}
+                  • {cohortBadgeText}
                 </span>
               )
             )}
@@ -128,11 +143,11 @@ export const AssignmentCard = ({
 
           <div className="flex items-center gap-2">
             {assignment.isGraded && (
-              <span className="material-symbols-outlined text-[20px] text-on-tertiary-container">
+              <span className="material-symbols-outlined text-[20px] text-on-tertiary-container shrink-0">
                 check_circle
               </span>
             )}
-            <h2 className="font-headline-lg text-xl md:text-2xl font-bold text-on-background tracking-tight">
+            <h2 className="font-headline-lg text-lg sm:text-xl md:text-2xl font-bold text-on-background tracking-tight">
               {assignment.title}
             </h2>
           </div>
@@ -212,10 +227,10 @@ export const AssignmentCard = ({
       </div>
 
       {/* Metadata Strip & Submission Drive */}
-      <div className="px-6 py-3.5 bg-surface-container-low border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+      <div className="px-4 sm:px-6 py-3 sm:py-3.5 bg-surface-container-low border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 text-xs">
         <div className="flex items-center gap-2 text-on-surface font-label-mono-sm font-medium">
           <span
-            className={`material-symbols-outlined text-[16px] ${
+            className={`material-symbols-outlined text-[16px] shrink-0 ${
               assignment.isGraded ? 'text-on-surface-variant' : 'text-secondary'
             }`}
           >
@@ -228,7 +243,7 @@ export const AssignmentCard = ({
         </div>
 
         {assignment.isGraded ? (
-          <div className="flex items-center gap-3 font-label-mono-xs text-on-surface uppercase">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 font-label-mono-xs text-on-surface uppercase">
             <span>
               Class Mean: <strong className="text-primary font-bold">{assignment.classMean}</strong>
             </span>
@@ -238,40 +253,40 @@ export const AssignmentCard = ({
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <span className="text-on-surface-variant font-label-mono-xs uppercase">Drive Folder:</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-on-surface-variant font-label-mono-xs uppercase shrink-0">Drive Folder:</span>
             <a
               href={assignment.driveUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 font-label-mono-sm font-medium text-on-surface hover:text-secondary underline underline-offset-4"
+              className="inline-flex items-center gap-1 font-label-mono-sm font-medium text-on-surface hover:text-secondary underline underline-offset-4 truncate max-w-full"
             >
-              <span>{assignment.driveUrl.replace('https://', '')}</span>
-              <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+              <span className="truncate">{assignment.driveUrl.replace('https://', '')}</span>
+              <span className="material-symbols-outlined text-[13px] shrink-0">open_in_new</span>
             </a>
           </div>
         )}
       </div>
 
       {/* Completion Telemetry Bar */}
-      <div className="px-6 py-4 border-b border-outline-variant bg-surface-container-lowest flex flex-col gap-2">
-        <div className="flex items-center justify-between text-xs font-label-mono-sm uppercase">
+      <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-outline-variant bg-surface-container-lowest flex flex-col gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-0 text-xs font-label-mono-sm uppercase">
           {assignment.isGraded ? (
-            <span className="font-bold text-on-surface text-sm">
-              28 of 28 Submitted • All Submissions Graded
+            <span className="font-bold text-on-surface text-xs sm:text-sm">
+              {submittedCount} of {totalStudents} Submitted • All Submissions Graded
             </span>
           ) : (
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-on-surface text-sm">
-                {assignment.submittedCount} of {assignment.totalStudents} Submitted
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <span className="font-bold text-on-surface text-xs sm:text-sm">
+                {submittedCount} of {totalStudents} Submitted
               </span>
-              <span className="text-outline-variant">•</span>
-              <span className="text-secondary font-semibold">
+              <span className="text-outline-variant hidden sm:inline">•</span>
+              <span className="text-secondary font-semibold text-xs sm:text-sm">
                 {pendingCount} Pending Submissions
               </span>
             </div>
           )}
-          <span className="font-bold text-on-surface tracking-wider text-sm">
+          <span className="font-bold text-on-surface tracking-wider text-xs sm:text-sm self-start sm:self-auto">
             {percentComplete}% Complete
           </span>
         </div>
@@ -284,18 +299,18 @@ export const AssignmentCard = ({
       </div>
 
       {/* Student Audit Sub-Panel */}
-      {!assignment.isGraded && assignment.submissions && assignment.submissions.length > 0 && (
+      {!assignment.isGraded && activeSubmissions.length > 0 && (
         <div className="flex flex-col">
-          <div className="px-6 py-3 bg-surface-container border-b border-outline-variant flex items-center justify-between">
+          <div className="px-4 sm:px-6 py-2.5 sm:py-3 bg-surface-container border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-0">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px] text-on-surface-variant">
+              <span className="material-symbols-outlined text-[16px] text-on-surface-variant shrink-0">
                 {assignment.cohortType === 'selected' ? 'groups' : 'format_list_bulleted'}
               </span>
               <h3 className="font-label-mono-sm text-xs font-bold text-on-surface uppercase tracking-wide">
                 {cohortHeading}
               </h3>
             </div>
-            <span className="font-label-mono-xs text-xs text-on-surface-variant uppercase font-medium">
+            <span className="font-label-mono-xs text-xs text-on-surface-variant uppercase font-medium self-start sm:self-auto">
               {cohortScopeLabel}
             </span>
           </div>
@@ -303,19 +318,19 @@ export const AssignmentCard = ({
           <Table className="w-full text-left border-collapse text-xs">
             <TableHeader>
               <TableRow className="bg-surface-container-high text-on-surface-variant font-label-mono-xs uppercase border-b border-outline-variant hover:bg-surface-container-high">
-                <TableHead className="h-auto py-3 px-6 font-semibold text-on-surface-variant">
+                <TableHead className="h-auto py-3 px-3 sm:px-6 font-semibold text-on-surface-variant">
                   Student Name
                 </TableHead>
-                <TableHead className="h-auto py-3 px-6 font-semibold text-on-surface-variant">
+                <TableHead className="h-auto py-3 px-3 sm:px-6 font-semibold text-on-surface-variant">
                   Student ID
                 </TableHead>
-                <TableHead className="h-auto py-3 px-6 font-semibold text-on-surface-variant">
+                <TableHead className="h-auto py-3 px-3 sm:px-6 font-semibold text-on-surface-variant">
                   Submission Status
                 </TableHead>
-                <TableHead className="h-auto py-3 px-6 font-semibold text-on-surface-variant">
+                <TableHead className="h-auto py-3 px-3 sm:px-6 font-semibold text-on-surface-variant">
                   Timestamp / Verification
                 </TableHead>
-                <TableHead className="h-auto py-3 px-6 text-right font-semibold text-on-surface-variant">
+                <TableHead className="h-auto py-3 px-3 sm:px-6 text-right font-semibold text-on-surface-variant">
                   Drive Record
                 </TableHead>
               </TableRow>
@@ -330,13 +345,13 @@ export const AssignmentCard = ({
                       : ''
                   }`}
                 >
-                  <TableCell className="py-3.5 px-6 font-semibold text-on-background">
+                  <TableCell className="py-3 sm:py-3.5 px-3 sm:px-6 font-semibold text-on-background whitespace-nowrap">
                     {submission.name}
                   </TableCell>
-                  <TableCell className="py-3.5 px-6 font-label-code text-on-surface-variant">
+                  <TableCell className="py-3 sm:py-3.5 px-3 sm:px-6 font-label-code text-on-surface-variant whitespace-nowrap">
                     {submission.studentId}
                   </TableCell>
-                  <TableCell className="py-3.5 px-6">
+                  <TableCell className="py-3 sm:py-3.5 px-3 sm:px-6 whitespace-nowrap">
                     {submission.status === 'Submitted' ? (
                       <Badge className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-low text-on-tertiary-container font-label-mono-xs font-bold border border-outline-variant rounded-none h-auto">
                         <span className="material-symbols-outlined text-[13px]">
@@ -353,10 +368,10 @@ export const AssignmentCard = ({
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="py-3.5 px-6 font-label-mono-xs text-on-surface-variant">
+                  <TableCell className="py-3 sm:py-3.5 px-3 sm:px-6 font-label-mono-xs text-on-surface-variant whitespace-nowrap">
                     {submission.timestamp}
                   </TableCell>
-                  <TableCell className="py-3.5 px-6 text-right font-label-mono-xs">
+                  <TableCell className="py-3 sm:py-3.5 px-3 sm:px-6 text-right font-label-mono-xs whitespace-nowrap">
                     {submission.status === 'Submitted' ? (
                       <a
                         href={submission.driveRecordUrl || '#'}
@@ -376,7 +391,7 @@ export const AssignmentCard = ({
             </TableBody>
           </Table>
 
-          <div className="px-6 py-3 bg-surface-container-low border-t border-outline-variant flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs font-label-mono-xs text-on-surface-variant">
+          <div className="px-4 sm:px-6 py-3 bg-surface-container-low border-t border-outline-variant flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs font-label-mono-xs text-on-surface-variant">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 uppercase">
               <span>{showingRange}</span>
               <span className="text-outline-variant hidden sm:inline">•</span>
@@ -448,19 +463,21 @@ export const AssignmentCard = ({
             </div>
           </div>
 
-          {assignment.code === 'CS101-ASN-003' && (
-            <div className="px-6 py-3 bg-surface-container-lowest border-t border-outline-variant flex items-center justify-between text-xs font-label-mono-xs text-on-surface-variant uppercase">
-              <span>Displaying 5 of 28 student records</span>
+          {assignment.code === 'CS101-ASN-003' && assignedStudentCount > pageSize && (
+            <div className="px-4 sm:px-6 py-3 bg-surface-container-lowest border-t border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 text-xs font-label-mono-xs text-on-surface-variant uppercase">
+              <span>
+                Displaying {lastItemIndex} of {assignedStudentCount} student records
+              </span>
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setExpandedRoster(!expandedRoster)}
-                className="hover:text-primary transition-colors flex items-center gap-1 font-semibold text-on-surface cursor-pointer rounded-none h-auto p-0 font-label-mono-xs text-xs uppercase shadow-none"
+                className="hover:text-primary transition-colors flex items-center gap-1 font-semibold text-on-surface cursor-pointer rounded-none h-auto p-0 font-label-mono-xs text-xs uppercase shadow-none self-start sm:self-auto"
               >
                 <span>
                   {expandedRoster
                     ? 'Collapse Complete Roster'
-                    : 'Expand Complete Roster (23 additional)'}
+                    : `Expand Complete Roster (${assignedStudentCount - pageSize} additional)`}
                 </span>
                 <span
                   className={`material-symbols-outlined text-[14px] transition-transform ${

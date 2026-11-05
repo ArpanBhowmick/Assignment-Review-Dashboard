@@ -61,7 +61,7 @@ export const RosterSelectionTable = ({
   const selectedCount = scope === 'all' ? roster.length : selectedStudentIds.length;
 
   return (
-    <section className="bg-surface-container-lowest border border-outline-variant p-space-lg flex flex-col gap-space-lg">
+    <section className="bg-surface-container-lowest border border-outline-variant p-3.5 sm:p-space-lg flex flex-col gap-space-lg">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-outline-variant pb-space-sm gap-2">
         <div className="flex items-center gap-space-sm">
           <Badge className="font-label-mono-xs text-label-mono-xs bg-primary text-on-primary px-space-xs py-0.5 font-bold rounded-none border-0 h-auto">
@@ -300,7 +300,7 @@ export const RosterSelectionTable = ({
         </Table>
 
         {/* Table Summary Footbar */}
-        <div className="p-space-sm bg-surface-container-high border-t border-outline-variant flex items-center justify-between font-label-mono-xs text-label-mono-xs text-on-surface-variant">
+        <div className="p-space-sm bg-surface-container-high border-t border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-0 font-label-mono-xs text-label-mono-xs text-on-surface-variant text-center sm:text-left">
           <span>Displaying 8 Roster Nodes in Preview Buffer (20 Additional in Register)</span>
           <span className="uppercase font-semibold">
             {isEditMode

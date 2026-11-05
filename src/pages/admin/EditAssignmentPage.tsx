@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { Assignment, RosterStudent, StudentSubmission } from '../../types';
+import type { Assignment, RosterStudent } from '../../types';
+import { getScopedStudents } from '../../lib/assignmentScope';
 import { RosterSelectionTable } from '../../components/admin/RosterSelectionTable';
 import { DeleteModal } from '../../components/admin/DeleteModal';
 import { Button } from '@/components/ui/button';
@@ -15,34 +16,6 @@ interface EditAssignmentPageProps {
   onUpdateAssignment: (assignment: Assignment) => void;
   onDeleteAssignment: (id: string) => void;
 }
-
-const findSubmissionForStudent = (
-  submissions: StudentSubmission[],
-  student: RosterStudent
-) =>
-  submissions.find(
-    (submission) =>
-      submission.studentId === student.studentId ||
-      submission.id === `sub-${student.id}` ||
-      submission.name === student.name
-  );
-
-const addSubmissionsForAssignedStudents = (
-  submissions: StudentSubmission[],
-  assignedStudents: RosterStudent[]
-): StudentSubmission[] => {
-  const newSubmissions: StudentSubmission[] = assignedStudents
-    .filter((student) => !findSubmissionForStudent(submissions, student))
-    .map((student) => ({
-      id: `sub-${student.id}`,
-      name: student.name,
-      studentId: student.studentId,
-      status: 'Not Submitted',
-      timestamp: 'Awaiting Student Push',
-    }));
-
-  return [...submissions, ...newSubmissions];
-};
 
 export const EditAssignmentPage = ({
   assignments,
@@ -73,10 +46,12 @@ export const EditAssignmentPage = ({
   const [scope, setScope] = useState<'all' | 'selected'>(
     currentAssignment?.cohortType || 'selected'
   );
-  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(
-    currentAssignment?.assignedStudentIds && currentAssignment.assignedStudentIds.length > 0
-      ? currentAssignment.assignedStudentIds
-      : ['1', '2', '3', '4', '5']
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(() =>
+    getScopedStudents(
+      currentAssignment?.cohortType ?? 'selected',
+      currentAssignment?.assignedStudentIds ?? [],
+      roster
+    ).map((student) => student.id)
   );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -101,10 +76,12 @@ export const EditAssignmentPage = ({
       return;
     }
 
-    const assignedStudents =
-      scope === 'all'
-        ? roster
-        : roster.filter((student) => selectedStudentIds.includes(student.id));
+    const assignedStudents = getScopedStudents(scope, selectedStudentIds, roster);
+
+    if (scope === 'selected' && assignedStudents.length === 0) {
+      alert('Please select at least one student for the restricted cohort.');
+      return;
+    }
 
     const updatedAssignment: Assignment = {
       ...currentAssignment,
@@ -115,17 +92,8 @@ export const EditAssignmentPage = ({
       deadlineDisplay: `${dueDate} at ${dueTime} EST`,
       driveUrl,
       cohortType: scope,
-      cohortBadgeText:
-        scope === 'selected'
-          ? `Restricted Cohort (${selectedStudentIds.length} Students)`
-          : undefined,
-      totalStudents: scope === 'all' ? 28 : selectedStudentIds.length,
-      assignedStudentIds:
-        scope === 'all' ? roster.map((student) => student.id) : selectedStudentIds,
-      submissions: addSubmissionsForAssignedStudents(
-        currentAssignment?.submissions ?? [],
-        assignedStudents
-      ),
+      totalStudents: assignedStudents.length,
+      assignedStudentIds: assignedStudents.map((student) => student.id),
     };
 
     onUpdateAssignment(updatedAssignment);
@@ -142,7 +110,7 @@ export const EditAssignmentPage = ({
   };
 
   return (
-    <div className="max-w-[1280px] mx-auto px-gutter py-space-lg">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-gutter py-4 sm:py-space-lg">
         <div className="flex flex-col w-full">
         {/* Top Academic Context & Breadcrumbs */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-sm pb-space-sm border-b border-outline-variant">
@@ -178,10 +146,10 @@ export const EditAssignmentPage = ({
                 CURRICULAR PROTOCOL CONFIGURATION
               </span>
             </div>
-            <h1 className="font-headline-xl text-headline-xl text-primary tracking-tight font-bold">
+            <h1 className="font-headline-xl text-2xl sm:text-headline-xl text-primary tracking-tight font-bold">
               Edit Assignment
             </h1>
-            <p className="font-body-md text-body-md text-on-surface-variant">
+            <p className="font-body-md text-sm sm:text-body-md text-on-surface-variant">
               Modify assignment parameters, deadline, submission repository link, and assigned student cohort.
             </p>
           </div>
@@ -203,8 +171,8 @@ export const EditAssignmentPage = ({
         {/* Form Architecture Flow */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-space-xl mt-space-lg">
           {/* SECTION 1: ASSIGNMENT INFORMATION */}
-          <section className="bg-surface-container-lowest border border-outline-variant p-space-lg flex flex-col gap-space-lg">
-            <div className="flex items-center justify-between border-b border-outline-variant pb-space-sm">
+          <section className="bg-surface-container-lowest border border-outline-variant p-4 sm:p-space-lg flex flex-col gap-space-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-outline-variant pb-space-sm gap-2">
               <div className="flex items-center gap-space-sm">
                 <Badge className="font-label-mono-xs text-label-mono-xs bg-primary text-on-primary px-space-xs py-0.5 font-bold rounded-none border-0 h-auto">
                   SEC 01
@@ -213,7 +181,7 @@ export const EditAssignmentPage = ({
                   ASSIGNMENT INFORMATION
                 </h2>
               </div>
-              <span className="font-label-mono-xs text-label-mono-xs text-on-surface-variant uppercase tracking-wider font-medium">
+              <span className="font-label-mono-xs text-label-mono-xs text-on-surface-variant uppercase tracking-wider font-medium self-start sm:self-auto">
                 CORE PARAMETERS
               </span>
             </div>
@@ -247,7 +215,7 @@ export const EditAssignmentPage = ({
 
             {/* Description Textarea */}
             <div className="flex flex-col gap-space-xs">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-0">
                 <Label
                   htmlFor="assignment-desc"
                   className="font-label-mono-xs text-label-mono-xs uppercase text-on-surface font-semibold tracking-wider"
@@ -279,8 +247,8 @@ export const EditAssignmentPage = ({
           </section>
 
           {/* SECTION 2: SUBMISSION DETAILS & TIMELINE */}
-          <section className="bg-surface-container-lowest border border-outline-variant p-space-lg flex flex-col gap-space-lg">
-            <div className="flex items-center justify-between border-b border-outline-variant pb-space-sm">
+          <section className="bg-surface-container-lowest border border-outline-variant p-4 sm:p-space-lg flex flex-col gap-space-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-outline-variant pb-space-sm gap-2">
               <div className="flex items-center gap-space-sm">
                 <Badge className="font-label-mono-xs text-label-mono-xs bg-primary text-on-primary px-space-xs py-0.5 font-bold rounded-none border-0 h-auto">
                   SEC 02
@@ -289,7 +257,7 @@ export const EditAssignmentPage = ({
                   SUBMISSION DETAILS &amp; TIMELINE
                 </h2>
               </div>
-              <span className="font-label-mono-xs text-label-mono-xs text-on-surface-variant uppercase tracking-wider font-medium">
+              <span className="font-label-mono-xs text-label-mono-xs text-on-surface-variant uppercase tracking-wider font-medium self-start sm:self-auto">
                 SCHEDULE &amp; REPOSITORY
               </span>
             </div>
@@ -301,7 +269,7 @@ export const EditAssignmentPage = ({
                   <span className="material-symbols-outlined text-[15px] text-secondary">schedule</span>
                   Submission Cutoff Deadline (EST / UTC-05) <span className="text-error">*</span>
                 </span>
-                <div className="grid grid-cols-2 gap-space-sm pt-space-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-sm pt-space-xs">
                   <div>
                     <Label
                       htmlFor="due-date"
@@ -360,7 +328,7 @@ export const EditAssignmentPage = ({
                     Verified
                   </Badge>
                 </div>
-                <div className="flex items-center gap-space-xs pt-space-xs">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-space-xs pt-space-xs">
                   <div className="relative flex-1">
                     <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                       <span className="material-symbols-outlined text-[16px] text-on-surface-variant">link</span>
@@ -379,7 +347,7 @@ export const EditAssignmentPage = ({
                     type="button"
                     variant="outline"
                     onClick={handleTestDrive}
-                    className="shrink-0 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant px-space-md py-2 font-label-mono-xs text-label-mono-xs uppercase tracking-wider text-on-surface font-semibold transition-colors flex items-center gap-1 cursor-pointer rounded-none h-auto shadow-none font-normal"
+                    className="shrink-0 bg-surface-container-lowest hover:bg-surface-container-high border border-outline-variant px-space-md py-2 font-label-mono-xs text-label-mono-xs uppercase tracking-wider text-on-surface font-semibold transition-colors flex items-center justify-center gap-1 cursor-pointer rounded-none h-auto shadow-none font-normal"
                   >
                     <span className="material-symbols-outlined text-[14px]">open_in_new</span>
                     <span>Test Drive Link ↗</span>
@@ -403,15 +371,15 @@ export const EditAssignmentPage = ({
           />
 
           {/* Grounded Form Actions Bar */}
-          <div className="sticky bottom-0 z-40 bg-surface-container-lowest border-t-2 border-primary py-space-md px-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-md shadow-sm">
+          <div className="sticky bottom-0 z-40 bg-surface-container-lowest border-t-2 border-primary py-space-md px-4 sm:px-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-md shadow-sm">
             <div className="flex items-center gap-space-md">
-              <span className="w-2 h-2 rounded-full bg-on-tertiary-container animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-on-tertiary-container animate-pulse shrink-0" />
               <span className="font-label-mono-xs text-label-mono-xs text-on-surface font-semibold uppercase">
                 Changes will apply to assigned student portals
               </span>
             </div>
 
-            <div className="flex items-center gap-space-sm w-full sm:w-auto justify-end">
+            <div className="flex flex-wrap items-center gap-space-sm w-full sm:w-auto justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -443,8 +411,8 @@ export const EditAssignmentPage = ({
 
         {/* Status Toast Simulation */}
         {toastMessage && (
-          <div className="fixed bottom-20 right-6 z-50 bg-primary text-on-primary p-space-md border border-outline-variant shadow-xl max-w-sm flex items-start gap-space-sm animate-in fade-in slide-in-from-bottom-4">
-            <span className="material-symbols-outlined text-tertiary-fixed text-[20px]">
+          <div className="fixed bottom-20 left-4 right-4 sm:left-auto sm:right-6 z-50 bg-primary text-on-primary p-space-md border border-outline-variant shadow-xl sm:max-w-sm flex items-start gap-space-sm animate-in fade-in slide-in-from-bottom-4">
+            <span className="material-symbols-outlined text-tertiary-fixed text-[20px] shrink-0">
               check_circle
             </span>
             <div className="flex flex-col">

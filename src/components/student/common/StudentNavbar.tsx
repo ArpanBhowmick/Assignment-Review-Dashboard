@@ -2,26 +2,26 @@ import { NavLink } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 export interface StudentNavbarProps {
-  studentName?: string;
-  studentId?: string;
-  standing?: string;
+  studentName: string;
+  studentId: string;
+  standing: string;
   courseTitle?: string;
   onLogout?: () => void;
 }
 
 export const StudentNavbar = ({
-  studentName = 'Alex Doe',
-  studentId = '#STU-4819',
-  standing = 'CS Undergrad',
+  studentName,
+  studentId,
+  standing,
   onLogout,
 }: StudentNavbarProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest border-b border-surface-dim">
-      <div className="h-16 max-w-[1280px] mx-auto px-gutter flex items-center justify-between">
-        <div className="flex items-center gap-space-lg">
+      <div className="h-16 max-w-[1280px] mx-auto px-2.5 sm:px-gutter flex items-center justify-between">
+        <div className="flex items-center gap-1.5 sm:gap-space-lg min-w-0">
           <NavLink
             to="/student/dashboard"
-            className="flex items-center gap-space-sm text-left cursor-pointer bg-transparent border-0 p-0"
+            className="flex items-center gap-space-sm text-left cursor-pointer bg-transparent border-0 p-0 shrink-0"
           >
             <span className="font-headline-md text-headline-md tracking-tight text-primary uppercase">
               JOINEAZY
@@ -29,13 +29,13 @@ export const StudentNavbar = ({
             
           </NavLink>
 
-          <div className="h-4 w-px bg-outline-variant hidden sm:block" />
+          <div className="h-4 w-px bg-outline-variant hidden sm:block shrink-0" />
 
-          <nav className="flex items-center gap-space-xs">
+          <nav className="flex items-center gap-1 sm:gap-space-xs">
             <NavLink
               to="/student/dashboard"
               className={({ isActive }) =>
-                `px-space-md py-1.5 rounded-DEFAULT transition-colors font-body-md text-body-md ${
+                `px-2 sm:px-space-md py-1.5 rounded-DEFAULT transition-colors font-body-sm sm:font-body-md text-xs sm:text-body-md whitespace-nowrap ${
                   isActive
                     ? 'bg-primary text-on-primary font-medium'
                     : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
@@ -50,7 +50,7 @@ export const StudentNavbar = ({
                 type="button"
                 variant="ghost"
                 onClick={onLogout}
-                className="px-space-md py-1.5 rounded-DEFAULT font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer bg-transparent border-0 h-auto shadow-none font-normal"
+                className="px-2 sm:px-space-md py-1.5 rounded-DEFAULT font-body-sm sm:font-body-md text-xs sm:text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer bg-transparent border-0 h-auto shadow-none font-normal"
               >
                 Logout
               </Button>
@@ -58,7 +58,7 @@ export const StudentNavbar = ({
           </nav>
         </div>
 
-        <div className="flex items-center gap-space-md">
+        <div className="flex items-center gap-1.5 sm:gap-space-md shrink-0">
           <div className="hidden md:flex flex-col items-end">
             <span className="font-body-md text-body-md font-semibold text-on-surface">
               {studentName}
@@ -67,7 +67,7 @@ export const StudentNavbar = ({
               {standing} • {studentId}
             </span>
           </div>
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-on-primary text-[18px]">
               person
             </span>

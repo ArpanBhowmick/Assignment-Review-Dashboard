@@ -1,24 +1,16 @@
 import type { Assignment, RosterStudent, StudentSubmission } from '../../types';
+import { findSubmissionForStudent } from '../../lib/assignmentScope';
 
 export type StudentStatus = 'submitted' | 'overdue' | 'pending';
-
-type StudentReference =
-  | RosterStudent
-  | { id: string; studentId?: string; name?: string };
 
 /**
  * Finds the submission record for a given student in an assignment.
  */
 export function getStudentSubmission(
   assignment: Assignment,
-  student: StudentReference
+  student: RosterStudent
 ): StudentSubmission | undefined {
-  return assignment.submissions.find(
-    (submission) =>
-      (student.studentId && submission.studentId === student.studentId) ||
-      submission.id === `sub-${student.id}` ||
-      (student.name && submission.name === student.name)
-  );
+  return findSubmissionForStudent(assignment.submissions, student);
 }
 
 /**
@@ -32,14 +24,7 @@ export function isAssignmentAssignedToStudent(
     return true;
   }
 
-  const isExplicitlyAssigned = assignment.assignedStudentIds.includes(student.id);
-  const hasExistingSubmission = assignment.submissions.some(
-    (submission) =>
-      submission.studentId === student.studentId ||
-      submission.name === student.name
-  );
-
-  return isExplicitlyAssigned || hasExistingSubmission;
+  return assignment.assignedStudentIds.includes(student.id);
 }
 
 /**
@@ -47,7 +32,7 @@ export function isAssignmentAssignedToStudent(
  */
 export function getStudentAssignmentStatus(
   assignment: Assignment,
-  student: StudentReference
+  student: RosterStudent
 ): StudentStatus {
   const submission = getStudentSubmission(assignment, student);
   if (submission?.status === 'Submitted') {

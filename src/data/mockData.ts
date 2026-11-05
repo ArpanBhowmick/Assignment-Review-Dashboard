@@ -15,14 +15,6 @@ export const mockRoster: RosterStudent[] = [
   { id: '12', name: 'Elena Rostova', studentId: '#STU-3312', section: 'SEC-01 (M/W)', standing: 'Regular Standing' },
 ];
 
-export const currentStudent: RosterStudent = {
-  id: '6',
-  name: 'Alex Doe',
-  studentId: '#STU-4819',
-  section: 'SEC-01 (M/W)',
-  standing: 'CS Undergrad',
-};
-
 export const initialAssignments: Assignment[] = [
   {
     id: 'CS101-ASN-003',

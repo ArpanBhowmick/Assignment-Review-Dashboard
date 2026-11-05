@@ -1,28 +1,29 @@
 import { Outlet } from 'react-router-dom';
 import StudentNavbar from '../student/common/StudentNavbar';
 import StudentFooter from '../student/common/StudentFooter';
-import type { UserAccount } from '../../pages/Auth/authAccounts';
+import type { RosterStudent } from '../../types';
 
 interface StudentLayoutProps {
-  currentUser: UserAccount;
+  currentStudent: RosterStudent;
   onLogout: () => void;
 }
 
-export const StudentLayout = ({ currentUser, onLogout }: StudentLayoutProps) => {
-  const standing = currentUser.subtitle.split('·')[0].trim();
-
+export const StudentLayout = ({
+  currentStudent,
+  onLogout,
+}: StudentLayoutProps) => {
   return (
     <div className="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col">
       <StudentNavbar
-        studentName={currentUser.name}
-        studentId={currentUser.id}
-        standing={standing}
+        studentName={currentStudent.name}
+        studentId={currentStudent.studentId}
+        standing={currentStudent.standing}
         onLogout={onLogout}
       />
-      <main className="w-full pt-24 min-h-[calc(100vh-4rem)] max-w-[1280px] mx-auto px-gutter bg-surface flex-1">
+      <main className="w-full pt-20 sm:pt-24 min-h-[calc(100vh-4rem)] max-w-[1280px] mx-auto px-4 sm:px-gutter bg-surface flex-1">
         <Outlet />
       </main>
-      <StudentFooter />
+      <StudentFooter studentId={currentStudent.studentId} />
     </div>
   );
 };

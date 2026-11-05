@@ -29,7 +29,7 @@ export const DeleteModal = ({
     >
       <AlertDialogContent
         overlayClassName="bg-primary/40 backdrop-blur-sm"
-        className="!max-w-lg w-full !rounded-none bg-surface-container-lowest p-space-lg border border-outline-variant space-y-space-md shadow-2xl !ring-0 !gap-0"
+        className="!max-w-lg w-[calc(100%-2rem)] sm:w-full !rounded-none bg-surface-container-lowest p-4 sm:p-space-lg border border-outline-variant space-y-space-md shadow-2xl !ring-0 !gap-0"
       >
         <div className="flex items-center gap-space-xs text-error">
           <span className="material-symbols-outlined text-[24px]">warning</span>
@@ -53,12 +53,12 @@ export const DeleteModal = ({
           </AlertDescription>
         </Alert>
 
-        <div className="flex items-center justify-end gap-space-sm pt-space-xs">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-space-sm pt-space-xs">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
-            className="px-space-md py-2 bg-surface-container hover:bg-surface-container-high text-on-surface font-label-code text-label-code uppercase transition-colors cursor-pointer rounded-none border-0 h-auto font-normal shadow-none"
+            className="w-full sm:w-auto px-space-md py-2 bg-surface-container hover:bg-surface-container-high text-on-surface font-label-code text-label-code uppercase transition-colors cursor-pointer rounded-none border-0 h-auto font-normal shadow-none"
           >
             Cancel
           </Button>
@@ -66,7 +66,7 @@ export const DeleteModal = ({
             type="button"
             variant="destructive"
             onClick={onConfirm}
-            className="px-space-md py-2 bg-error hover:bg-error/90 text-on-error font-label-code text-label-code uppercase flex items-center gap-1 transition-colors cursor-pointer rounded-none border-0 h-auto font-normal shadow-none"
+            className="w-full sm:w-auto px-space-md py-2 bg-error hover:bg-error/90 text-on-error font-label-code text-label-code uppercase flex items-center justify-center gap-1 transition-colors cursor-pointer rounded-none border-0 h-auto font-normal shadow-none"
           >
             <span className="material-symbols-outlined text-[16px]">delete_forever</span>
             <span>Confirm Delete</span>

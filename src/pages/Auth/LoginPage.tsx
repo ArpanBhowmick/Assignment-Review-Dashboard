@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   type UserRole,
@@ -23,6 +23,7 @@ const isUserRole = (value: string): value is UserRole =>
   value === 'student' || value === 'admin';
 
 export const LoginPage = ({
+  currentUser,
   onSelectAccount,
   defaultRole = 'student',
 }: LoginPageProps) => {
@@ -33,6 +34,15 @@ export const LoginPage = ({
   );
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate(
+        currentUser.role === 'admin' ? '/assignments' : '/student/dashboard',
+        { replace: true }
+      );
+    }
+  }, [currentUser, navigate]);
 
   const activeAccounts = accountsForRole(role);
   const selectedAccount =
@@ -57,10 +67,6 @@ export const LoginPage = ({
     setIsAuthenticating(true);
     setShowNotification(true);
 
-    if (onSelectAccount) {
-      onSelectAccount(selectedAccount);
-    }
-
     // Save active auth session to localStorage for persistence
     try {
       localStorage.setItem('joineazy_auth_user', JSON.stringify(selectedAccount));
@@ -70,10 +76,14 @@ export const LoginPage = ({
 
     // Smooth authentication transition
     setTimeout(() => {
+      if (onSelectAccount) {
+        onSelectAccount(selectedAccount);
+      }
+
       if (selectedAccount.role === 'admin') {
-        navigate('/assignments');
+        navigate('/assignments', { replace: true });
       } else {
-        navigate('/student/dashboard');
+        navigate('/student/dashboard', { replace: true });
       }
     }, 900);
   };
@@ -82,7 +92,7 @@ export const LoginPage = ({
     <div className="bg-background font-body-md text-on-surface antialiased min-h-screen flex flex-col selection:bg-primary selection:text-white">
       {/* Fixed Top Header */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-surface-container-lowest border-b border-outline-variant">
-        <div className="h-16 max-w-[1280px] mx-auto px-gutter flex items-center justify-between">
+        <div className="h-16 max-w-[1280px] mx-auto px-4 sm:px-gutter flex items-center justify-between">
           <div className="flex items-center gap-space-md">
             <span className="font-headline-md text-headline-md tracking-tight text-on-surface uppercase font-bold">
               JOINEAZY
@@ -99,23 +109,23 @@ export const LoginPage = ({
       </header>
 
       {/* Main Role Selection Area */}
-      <main className="w-full pt-24 pb-12 bg-background flex-1 flex items-center justify-center">
-        <div className="w-full max-w-[640px] px-4 py-8 flex flex-col gap-6">
+      <main className="w-full pt-20 sm:pt-24 pb-8 sm:pb-12 bg-background flex-1 flex items-center justify-center">
+        <div className="w-full max-w-[640px] px-3.5 sm:px-4 py-6 sm:py-8 flex flex-col gap-5 sm:gap-6">
           {/* Welcome Title Block */}
           <div className="text-center flex flex-col items-center gap-2">
             <div className="w-11 h-11 rounded-lg bg-primary text-white flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined text-[22px]">school</span>
             </div>
-            <h1 className="font-headline-xl text-headline-xl text-on-surface tracking-tight uppercase font-bold">
+            <h1 className="font-headline-xl text-2xl sm:text-headline-xl text-on-surface tracking-tight uppercase font-bold">
               Welcome to Joineazy
             </h1>
-            <p className="font-body-lg text-body-lg text-on-surface-variant">
+            <p className="font-body-lg text-sm sm:text-body-lg text-on-surface-variant">
               Sign in to access your assignment dashboard.
             </p>
           </div>
 
           {/* Role & Account Selection Card */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 sm:p-8 flex flex-col gap-6 shadow-sm">
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 sm:p-8 flex flex-col gap-5 sm:gap-6 shadow-sm">
             {/* Role Toggle Selector */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
@@ -135,17 +145,17 @@ export const LoginPage = ({
                 <TabsList className="grid grid-cols-2 p-1 bg-surface-container-low rounded-lg border border-outline-variant w-full h-auto group-data-horizontal/tabs:h-auto">
                   <TabsTrigger
                     value="student"
-                    className="py-2.5 px-3 rounded font-label-code text-label-code uppercase transition-all flex items-center justify-center gap-2 cursor-pointer border-0 h-auto shadow-none font-semibold text-on-surface-variant hover:text-on-surface bg-transparent data-active:bg-primary data-active:text-white data-active:font-semibold data-active:shadow-sm data-active:hover:bg-primary data-active:hover:text-white"
+                    className="py-2.5 px-2 sm:px-3 rounded font-label-code text-xs sm:text-label-code uppercase transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer border-0 h-auto shadow-none font-semibold text-on-surface-variant hover:text-on-surface bg-transparent data-active:bg-primary data-active:text-white data-active:font-semibold data-active:shadow-sm data-active:hover:bg-primary data-active:hover:text-white"
                   >
-                    <span className="material-symbols-outlined text-[18px]">person</span>
+                    <span className="material-symbols-outlined text-[16px] sm:text-[18px]">person</span>
                     <span>Student</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value="admin"
-                    className="py-2.5 px-3 rounded font-label-code text-label-code uppercase transition-all flex items-center justify-center gap-2 cursor-pointer border-0 h-auto shadow-none font-semibold text-on-surface-variant hover:text-on-surface bg-transparent data-active:bg-primary data-active:text-white data-active:font-semibold data-active:shadow-sm data-active:hover:bg-primary data-active:hover:text-white"
+                    className="py-2.5 px-2 sm:px-3 rounded font-label-code text-xs sm:text-label-code uppercase transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer border-0 h-auto shadow-none font-semibold text-on-surface-variant hover:text-on-surface bg-transparent data-active:bg-primary data-active:text-white data-active:font-semibold data-active:shadow-sm data-active:hover:bg-primary data-active:hover:text-white"
                   >
-                    <span className="material-symbols-outlined text-[18px]">shield_person</span>
-                    <span>Admin (Professor)</span>
+                    <span className="material-symbols-outlined text-[16px] sm:text-[18px]">shield_person</span>
+                    <span className="truncate">Admin (Professor)</span>
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -230,9 +240,9 @@ export const LoginPage = ({
                 variant="default"
                 onClick={handleContinue}
                 disabled={isAuthenticating}
-                className="w-full bg-black hover:bg-slate-800 text-white py-3.5 px-5 rounded-lg font-label-code text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm font-semibold active:scale-[0.99] cursor-pointer border-0 disabled:opacity-75 h-auto"
+                className="w-full bg-black hover:bg-slate-800 text-white py-3.5 px-3 sm:px-5 rounded-lg font-label-code text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm font-semibold active:scale-[0.99] cursor-pointer border-0 disabled:opacity-75 h-auto text-center"
               >
-                <span className="text-white">
+                <span className="text-white text-center">
                   {isAuthenticating
                     ? 'Authenticating Session...'
                     : `Continue as ${selectedAccount.name} →`}
@@ -246,8 +256,8 @@ export const LoginPage = ({
                 </span>
               </Button>
 
-              <div className="flex items-center justify-center gap-1.5 text-center text-on-surface-variant font-body-sm text-body-sm">
-                <span className="material-symbols-outlined text-[15px] text-secondary">info</span>
+              <div className="flex items-center justify-center gap-1.5 text-center text-on-surface-variant font-body-sm text-xs sm:text-body-sm">
+                <span className="material-symbols-outlined text-[15px] text-secondary shrink-0">info</span>
                 <span>Sandbox Mode: Instant authentication into the selected user session.</span>
               </div>
             </div>
@@ -257,7 +267,7 @@ export const LoginPage = ({
 
       {/* Authentication Floating Toast Notification */}
       <div
-        className={`fixed bottom-6 right-6 max-w-md bg-white border border-outline-variant shadow-xl rounded-xl p-4 transition-all duration-300 z-50 flex items-start gap-3 ${
+        className={`fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md bg-white border border-outline-variant shadow-xl rounded-xl p-4 transition-all duration-300 z-50 flex items-start gap-3 ${
           showNotification
             ? 'translate-y-0 opacity-100 pointer-events-auto'
             : 'translate-y-24 opacity-0 pointer-events-none'
@@ -270,25 +280,25 @@ export const LoginPage = ({
         >
           {selectedAccount.initials}
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h4 className="font-headline-md text-[14px] leading-tight font-bold text-on-surface">
             {selectedAccount.role === 'admin'
               ? 'Launching Admin Dashboard'
               : 'Launching Student Dashboard'}
           </h4>
-          <p className="font-body-sm text-on-surface-variant mt-0.5 text-xs">
+          <p className="font-body-sm text-on-surface-variant mt-0.5 text-xs truncate sm:whitespace-normal">
             Redirecting {selectedAccount.name} ({selectedAccount.id}) to active session...
           </p>
           <div className="w-full bg-surface-container rounded-full h-1 mt-2.5 overflow-hidden">
             <div className="bg-secondary h-full w-full animate-pulse" />
           </div>
         </div>
-        <span className="material-symbols-outlined text-outline text-[18px]">open_in_new</span>
+        <span className="material-symbols-outlined text-outline text-[18px] shrink-0">open_in_new</span>
       </div>
 
       {/* Institutional Footer */}
       <footer className="w-full bg-surface-container-lowest border-t border-outline-variant">
-        <div className="h-16 max-w-[1280px] mx-auto px-gutter flex items-center justify-between flex-wrap gap-space-sm">
+        <div className="min-h-16 py-3 sm:py-0 max-w-[1280px] mx-auto px-4 sm:px-gutter flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
           <span className="font-label-mono-xs text-label-mono-xs uppercase text-on-surface-variant">
             © 2024 JOINEAZY ACADEMIC SYSTEMS • CS DEPARTMENT CORE INFRASTRUCTURE
           </span>

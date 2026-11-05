@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
-import { initialAssignments, mockRoster, currentStudent } from './data/mockData';
+import { useNavigationLock } from './hooks/useNavigationLock';
+import { initialAssignments, mockRoster } from './data/mockData';
 import type { Assignment, StudentSubmission } from './types';
 import AdminLayout from './components/layout/AdminLayout';
 import StudentLayout from './components/layout/StudentLayout';
+import { StudentIdentityUnavailable } from './components/student/StudentIdentityUnavailable';
+import {
+  getStudentSubmission,
+  isAssignmentAssignedToStudent,
+} from './components/student/studentUtils';
+import { synchronizeAssignment } from './lib/assignmentScope';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { CreateAssignmentPage } from './pages/admin/CreateAssignmentPage';
 import { EditAssignmentPage } from './pages/admin/EditAssignmentPage';
@@ -11,6 +18,7 @@ import { StudentDashboardPage } from './pages/student/StudentDashboardPage';
 import { AssignmentDetailsPage } from './pages/student/AssignmentDetailsPage';
 import LoginPage from './pages/Auth/LoginPage';
 import {
+  resolveStudentForAccount,
   SEEDED_ADMIN_ACCOUNTS,
   SEEDED_STUDENT_ACCOUNTS,
   type UserAccount,
@@ -23,11 +31,6 @@ const SEEDED_ACCOUNTS = [...SEEDED_STUDENT_ACCOUNTS, ...SEEDED_ADMIN_ACCOUNTS];
 
 const dashboardPathForRole = (role: UserRole) =>
   role === 'admin' ? '/assignments' : '/student/dashboard';
-
-const matchesCurrentStudent = (submission: StudentSubmission) =>
-  submission.studentId === currentStudent.studentId ||
-  submission.name === currentStudent.name ||
-  submission.id === `sub-${currentStudent.id}`;
 
 const readStoredAccount = (): UserAccount | null => {
   try {
@@ -61,18 +64,25 @@ const readStoredAccount = (): UserAccount | null => {
 };
 
 function App() {
+  useNavigationLock();
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(readStoredAccount);
+  const currentStudent = resolveStudentForAccount(currentUser, mockRoster);
   const [assignments, setAssignments] = useState<Assignment[]>(() => {
+    let storedAssignments = initialAssignments;
+
     try {
       const savedAssignments = localStorage.getItem(ASSIGNMENTS_STORAGE_KEY);
       if (savedAssignments) {
-        return JSON.parse(savedAssignments) as Assignment[];
+        storedAssignments = JSON.parse(savedAssignments) as Assignment[];
       }
     } catch (error) {
       console.error('Failed to load assignments from localStorage:', error);
     }
-    return initialAssignments;
+
+    return storedAssignments.map((assignment) =>
+      synchronizeAssignment(assignment, mockRoster)
+    );
   });
 
   useEffect(() => {
@@ -103,13 +113,18 @@ function App() {
   };
 
   const handleCreateAssignment = (newAssignment: Assignment) => {
-    setAssignments((prev) => [newAssignment, ...prev]);
+    setAssignments((prev) => [
+      synchronizeAssignment(newAssignment, mockRoster),
+      ...prev,
+    ]);
   };
 
   const handleUpdateAssignment = (updatedAssignment: Assignment) => {
     setAssignments((prev) =>
       prev.map((assignment) =>
-        assignment.id === updatedAssignment.id ? updatedAssignment : assignment
+        assignment.id === updatedAssignment.id
+          ? synchronizeAssignment(updatedAssignment, mockRoster)
+          : assignment
       )
     );
   };
@@ -119,48 +134,50 @@ function App() {
   };
 
   const handleSubmitAssignment = (assignmentId: string, timestamp: string) => {
+    const submittingStudent = currentStudent;
+
     setAssignments((prev) =>
       prev.map((assignment) => {
-        if (assignment.id !== assignmentId) return assignment;
-
-        const existingSubmission = assignment.submissions.find(matchesCurrentStudent);
-        let updatedSubmissions: StudentSubmission[];
-        let isNewlySubmitted = false;
-
-        if (existingSubmission) {
-          if (existingSubmission.status !== 'Submitted') {
-            isNewlySubmitted = true;
-          }
-          updatedSubmissions = assignment.submissions.map((submission) =>
-            matchesCurrentStudent(submission)
-              ? {
-                  ...submission,
-                  status: 'Submitted' as const,
-                  timestamp,
-                }
-              : submission
-          );
-        } else {
-          isNewlySubmitted = true;
-          updatedSubmissions = [
-            ...assignment.submissions,
-            {
-              id: `sub-${currentStudent.id}`,
-              name: currentStudent.name,
-              studentId: currentStudent.studentId,
-              status: 'Submitted' as const,
-              timestamp,
-            },
-          ];
+        if (
+          !submittingStudent ||
+          assignment.id !== assignmentId ||
+          !isAssignmentAssignedToStudent(assignment, submittingStudent)
+        ) {
+          return assignment;
         }
 
-        return {
-          ...assignment,
-          submittedCount: isNewlySubmitted
-            ? assignment.submittedCount + 1
-            : assignment.submittedCount,
-          submissions: updatedSubmissions,
-        };
+        const existingSubmission = getStudentSubmission(
+          assignment,
+          submittingStudent
+        );
+        const updatedSubmissions: StudentSubmission[] = existingSubmission
+          ? assignment.submissions.map((submission) =>
+              submission === existingSubmission
+                ? {
+                    ...submission,
+                    status: 'Submitted' as const,
+                    timestamp,
+                  }
+                : submission
+            )
+          : [
+              ...assignment.submissions,
+              {
+                id: `sub-${submittingStudent.id}`,
+                name: submittingStudent.name,
+                studentId: submittingStudent.studentId,
+                status: 'Submitted' as const,
+                timestamp,
+              },
+            ];
+
+        return synchronizeAssignment(
+          {
+            ...assignment,
+            submissions: updatedSubmissions,
+          },
+          mockRoster
+        );
       })
     );
   };
@@ -173,7 +190,11 @@ function App() {
       <Route
         path="/login"
         element={
-          <LoginPage currentUser={currentUser} onSelectAccount={handleLogin} />
+          currentUser ? (
+            <Navigate to={dashboardPathForRole(currentUser.role)} replace />
+          ) : (
+            <LoginPage currentUser={currentUser} onSelectAccount={handleLogin} />
+          )
         }
       />
 
@@ -192,6 +213,7 @@ function App() {
           element={
             <AdminDashboardPage
               assignments={assignments}
+              roster={mockRoster}
               onDeleteAssignment={handleDeleteAssignment}
             />
           }
@@ -222,7 +244,14 @@ function App() {
       <Route
         element={
           currentUser?.role === 'student' ? (
-            <StudentLayout currentUser={currentUser} onLogout={handleLogout} />
+            currentStudent ? (
+              <StudentLayout
+                currentStudent={currentStudent}
+                onLogout={handleLogout}
+              />
+            ) : (
+              <StudentIdentityUnavailable onLogout={handleLogout} />
+            )
           ) : (
             <Navigate to={roleHome} replace />
           )
@@ -231,20 +260,28 @@ function App() {
         <Route
           path="/student/dashboard"
           element={
-            <StudentDashboardPage
-              assignments={assignments}
-              currentStudent={currentStudent}
-            />
+            currentStudent ? (
+              <StudentDashboardPage
+                assignments={assignments}
+                currentStudent={currentStudent}
+              />
+            ) : (
+              <StudentIdentityUnavailable onLogout={handleLogout} />
+            )
           }
         />
         <Route
           path="/student/assignments/:id"
           element={
-            <AssignmentDetailsPage
-              assignments={assignments}
-              currentStudent={currentStudent}
-              onSubmitAssignment={handleSubmitAssignment}
-            />
+            currentStudent ? (
+              <AssignmentDetailsPage
+                assignments={assignments}
+                currentStudent={currentStudent}
+                onSubmitAssignment={handleSubmitAssignment}
+              />
+            ) : (
+              <StudentIdentityUnavailable onLogout={handleLogout} />
+            )
           }
         />
       </Route>
