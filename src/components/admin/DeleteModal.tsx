@@ -6,6 +6,7 @@ import {
   AlertDialogDescription,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface DeleteModalProps {
   isOpen: boolean;
@@ -39,9 +40,14 @@ export const DeleteModal: React.FC<DeleteModalProps> = ({
           This action will detach all student Drive links and remove the record from the faculty ledger.
         </AlertDialogDescription>
 
-        <div className="p-space-sm bg-error-container text-on-error-container font-label-mono-xs text-label-mono-xs font-medium">
-          SECURITY PROTOCOL: RECORD DELETION REQUIRES SUPERVISORY NOTIFICATION UNDER SEC-882-B.
-        </div>
+        <Alert
+          variant="destructive"
+          className="p-space-sm bg-error-container text-on-error-container font-label-mono-xs text-label-mono-xs font-medium rounded-none border-0 shadow-none"
+        >
+          <AlertDescription className="font-label-mono-xs text-label-mono-xs font-medium text-inherit">
+            SECURITY PROTOCOL: RECORD DELETION REQUIRES SUPERVISORY NOTIFICATION UNDER SEC-882-B.
+          </AlertDescription>
+        </Alert>
 
         <div className="flex items-center justify-end gap-space-sm pt-space-xs">
           <Button

@@ -3,6 +3,7 @@ import type { RosterStudent } from '../../types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface RosterSelectionTableProps {
   roster: RosterStudent[];
@@ -230,10 +231,9 @@ export const RosterSelectionTable: React.FC<RosterSelectionTableProps> = ({
                     className="hover:bg-surface-container-low transition-colors"
                   >
                     <td className="py-2.5 px-3 text-center">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={isChecked}
-                        onChange={() => {
+                        onCheckedChange={() => {
                           if (scope === 'all') {
                             onScopeChange('selected');
                             onSelectedChange(
@@ -245,7 +245,8 @@ export const RosterSelectionTable: React.FC<RosterSelectionTableProps> = ({
                             handleToggle(student.id);
                           }
                         }}
-                        className="student-checkbox accent-primary cursor-pointer"
+                        className="student-checkbox cursor-pointer"
+                        aria-label={`Select ${student.name}`}
                       />
                     </td>
                     <td className="py-2.5 px-3 font-semibold text-primary">

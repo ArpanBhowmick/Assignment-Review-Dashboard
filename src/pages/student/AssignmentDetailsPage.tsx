@@ -10,6 +10,7 @@ import {
 } from '../../components/student/studentUtils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export interface AssignmentDetailsPageProps {
   assignments: Assignment[];
@@ -124,22 +125,21 @@ export const AssignmentDetailsPage: React.FC<AssignmentDetailsPageProps> = ({
 
       {/* Success Banner (Displayed when Submitted) */}
       {isSubmitted && (
-        <div
-          role="alert"
-          className="p-space-md bg-tertiary-fixed text-on-tertiary-fixed-variant border border-on-tertiary-container rounded-DEFAULT flex items-center gap-space-sm animate-in fade-in slide-in-from-top-2"
+        <Alert
+          className="p-space-md bg-tertiary-fixed text-on-tertiary-fixed-variant border border-on-tertiary-container rounded-DEFAULT flex items-center gap-space-sm animate-in fade-in slide-in-from-top-2 shadow-none"
         >
-          <span className="material-symbols-outlined text-[20px] text-on-tertiary-container">
+          <span className="material-symbols-outlined text-[20px] text-on-tertiary-container shrink-0">
             check_circle
           </span>
           <div className="flex-1 text-body-sm font-medium">
-            <span className="font-semibold block text-on-surface">
+            <AlertTitle className="font-semibold block text-on-surface">
               Your submission has been recorded successfully.
-            </span>
-            <span className="text-on-surface-variant font-label-mono-xs uppercase">
+            </AlertTitle>
+            <AlertDescription className="text-on-surface-variant font-label-mono-xs uppercase mt-0.5">
               Official timestamp registered with Academic Course Registry: {submissionTimestamp}
-            </span>
+            </AlertDescription>
           </div>
-        </div>
+        </Alert>
       )}
 
       {/* CARD 1: Assignment Information */}

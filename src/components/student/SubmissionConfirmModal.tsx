@@ -97,10 +97,10 @@ export const SubmissionConfirmModal: React.FC<SubmissionConfirmModalProps> = ({
             variant="default"
             onClick={onConfirm}
             disabled={isSubmitting}
-            className="px-space-lg py-2.5 bg-primary hover:bg-surface-tint text-on-primary font-label-code text-label-code uppercase font-bold rounded-DEFAULT flex items-center justify-center gap-1.5 transition-colors order-1 sm:order-2 cursor-pointer border-0 shadow-sm disabled:opacity-50 h-auto"
+            className="px-space-lg py-2.5 bg-black hover:bg-slate-800 text-white font-label-code text-label-code uppercase font-semibold rounded-DEFAULT flex items-center justify-center gap-1.5 transition-all order-1 sm:order-2 cursor-pointer border-0 shadow-sm disabled:opacity-50 active:scale-[0.99] h-auto"
           >
-            <span className="material-symbols-outlined text-[16px]">check</span>
-            <span>{isSubmitting ? 'Submitting...' : 'Confirm Submission'}</span>
+            <span className="material-symbols-outlined text-[16px] text-white">check</span>
+            <span className="text-white">{isSubmitting ? 'Submitting...' : 'Confirm Submission'}</span>
           </Button>
         </div>
       </AlertDialogContent>
